@@ -7,6 +7,7 @@ import torchvision.transforms as T
 
 import torch.nn as nn
 import logging
+import os
 
 logger = logging.getLogger()
 
@@ -94,7 +95,7 @@ class ResnetTrainer:
             logger.info(f"Test acc at epoch {self.epoch}: {acc :.3f)}")
             self.test_accs.append(acc)
             if acc > self.best_test_acc:
-                self.best_test_acc = self.best_test_acc
+                self.best_test_acc = acc
                 self.best_state_dict = self.resnet.state_dict()
 
     def increment_epoch(self):
@@ -112,7 +113,8 @@ class ResnetTrainer:
                 "test_losses": self.epoch_test_losses,
                 "test_accs": self.test_accs,
                 "best_acc": self.best_test_acc,
-                "best_model": self.best_model,
-            }
+                "best_model": self.best_state_dict,
+            },
+            os.path.join(self.save_path, "final_state_resnet.tar"),
         )
 
