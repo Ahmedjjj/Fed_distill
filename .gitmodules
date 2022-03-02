@@ -1,0 +1,3 @@
+[submodule "external/DeepInversion"]
+	path = external/DeepInversion
+	url = https://github.com/NVlabs/DeepInversion
