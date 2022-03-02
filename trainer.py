@@ -1,13 +1,13 @@
-from dataclasses import dataclass
-from typing import Callable
-import torch
-from torch.utils.data import DataLoader, Dataset
-from torchvision.datasets import CIFAR10
-import torchvision.transforms as T
-
-import torch.nn as nn
 import logging
 import os
+from dataclasses import dataclass
+from typing import Callable
+
+import torch
+import torch.nn as nn
+import torchvision.transforms as T
+from torch.utils.data import DataLoader, Dataset
+from torchvision.datasets import CIFAR10
 
 logger = logging.getLogger()
 
@@ -17,8 +17,6 @@ class ResnetTrainer:
     resnet: nn.Module
     train_dataset: Dataset
     test_dataset: Dataset
-    train_transform: Callable
-    test_transform: Callable
     train_batch_size: int
     test_batch_size: int
     num_workers: int = 8
@@ -33,15 +31,14 @@ class ResnetTrainer:
             num_workers=self.num_workers,
         )
         self.test_loader = DataLoader(
-            self.test_dataset, batch_size=self.train_batch_size, num_workers=1
+            self.test_dataset, batch_size=self.test_batch_size, num_workers=1
         )
-
         self.criterion = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.SGD(
             self.resnet.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4
         )
         self.resnet.to(self.device)
-        self.optimizer.to(self.device)
+        self.criterion.to(self.device)
         self.epoch = 1
         self.epoch_train_losses = []
         self.epoch_test_losses = []
@@ -50,6 +47,7 @@ class ResnetTrainer:
         self.best_state_dict = None
 
     def train_epoch(self):
+        lr = 0.1
         if 80 <= self.epoch < 120:
             lr = 0.01
         elif self.epoch >= 120:
@@ -60,18 +58,18 @@ class ResnetTrainer:
 
         epoch_loss = 0
         self.resnet.train()
+        logger.info(f"Starting train epoch {self.epoch}")
         for i, (images, labels) in enumerate(self.train_loader):
-            logger.info(f"Starting train epoch {i+1}")
             self.optimizer.zero_grad()
-            prediction = self.resnet(images)
-            loss = self.criterion(prediction, labels)
+            prediction = self.resnet(images.to(self.device))
+            loss = self.criterion(prediction, labels.to(self.device))
             epoch_loss += float(loss)
             loss.backward()
             self.optimizer.step()
 
         self.epoch_train_losses.append(epoch_loss / len(self.train_dataset))
         logger.info(
-            f"Training loss at epoch {self.epoch}: {epoch_loss / len(self.train_dataset)}"
+            f"Training loss at epoch {self.epoch}: {epoch_loss / len(self.train_dataset):.3f}"
         )
 
     def test_epoch(self):
@@ -79,20 +77,20 @@ class ResnetTrainer:
         with torch.no_grad():
             epoch_loss = 0
             num_correct = 0
-            for i, (images, labels) in enumerate(self.train_loader):
-                logger.info(f"Starting test epoch {i+1}")
-                prediction = self.resnet(images)
-                loss = self.criterion(prediction, labels)
+            logger.info(f"Starting test epoch {self.epoch}")
+            for i, (images, labels) in enumerate(self.test_loader):
+                prediction = self.resnet(images.to(self.device))
+                loss = self.criterion(prediction, labels.to(self.device))
                 epoch_loss += float(loss)
                 pred_class = prediction.argmax(1)
-                num_correct += (pred_class == labels).sum()
+                num_correct += (pred_class == labels.to(self.device)).sum()
 
             self.epoch_test_losses.append(epoch_loss / len(self.test_dataset))
             logger.info(
-                f"Test loss at epoch {self.epoch}: {epoch_loss / len(self.test_dataset)}"
+                f"Test loss at epoch {self.epoch}: {epoch_loss / len(self.test_dataset):.3f}"
             )
             acc = num_correct / len(self.test_dataset)
-            logger.info(f"Test acc at epoch {self.epoch}: {acc :.3f)}")
+            logger.info(f"Test acc at epoch {self.epoch}: {acc:.3f}")
             self.test_accs.append(acc)
             if acc > self.best_test_acc:
                 self.best_test_acc = acc
