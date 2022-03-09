@@ -2,6 +2,7 @@
 
 import logging
 import sys
+import os
 
 import torch
 import torchvision.transforms as T
@@ -42,7 +43,7 @@ def main(data_dir, output_dir, epochs):
         test_dataset=test_dataset,
         train_batch_size=2048,
         test_batch_size=2048,
-        save_path=output_dir,
+        save_path=os.path.join(output_dir, "final_state_resnet18.tar"),
     )
 
     trainer.train(epochs)

@@ -21,7 +21,7 @@ class ResnetTrainer:
     test_batch_size: int
     num_workers: int = 8
     device: str = "cuda"
-    save_path: str = "."
+    save_path: str = "./final_state_resnet.tar"
 
     def __post_init__(self):
         self.train_loader = DataLoader(
@@ -113,6 +113,6 @@ class ResnetTrainer:
                 "best_acc": self.best_test_acc,
                 "best_model": self.best_state_dict,
             },
-            os.path.join(self.save_path, "final_state_resnet.tar"),
+            self.save_path),
         )
 
