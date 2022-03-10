@@ -1,13 +1,10 @@
 import logging
-import os
 from dataclasses import dataclass
-from typing import Callable
 
 import torch
 import torch.nn as nn
 import torchvision.transforms as T
 from torch.utils.data import DataLoader, Dataset
-from torchvision.datasets import CIFAR10
 
 logger = logging.getLogger()
 
@@ -113,6 +110,6 @@ class ResnetTrainer:
                 "best_acc": self.best_test_acc,
                 "best_model": self.best_state_dict,
             },
-            self.save_path),
+            self.save_path,
         )
 
