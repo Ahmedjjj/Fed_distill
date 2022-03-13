@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 
 model_weights/*
+.vscode/
