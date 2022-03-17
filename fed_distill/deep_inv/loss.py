@@ -28,7 +28,7 @@ class JensonShannonDiv(nn.Module):
 
         first_probs = torch.clamp(first_probs, 0.01, 0.99)
         second_probs = torch.clamp(second_probs, 0.01, 0.99)
-        second_probs = torch.clamp(second_probs, 0.01, 0.99)
+        mean_probs = torch.clamp(mean_probs, 0.01, 0.99)
 
         loss = 0.5 * (
             self.kl_div(torch.log(first_probs), mean_probs)
@@ -44,7 +44,7 @@ class DeepInversionLoss(nn.Module):
         l2_scale: float = 0.0,
         var_scale: float = 5e-5,
         bn_scale: float = 10,
-        comp_scale: float = 0,
+        comp_scale: float = 0.0,
         softmax_temp: float = 3,
     ):
         super().__init__()
@@ -63,7 +63,7 @@ class DeepInversionLoss(nn.Module):
         teacher_bns: List[torch.Tensor] = None,
         student_output: torch.Tensor = None,
     ) -> torch.Tensor:
-        loss = self.criterion(targets, teacher_output)
+        loss = self.criterion(teacher_output, targets)
         if self.l2_scale > 0.0:
             loss += self.l2_scale * torch.norm(inputs, 2)
 
@@ -71,11 +71,11 @@ class DeepInversionLoss(nn.Module):
             loss += self.var_scale * compute_var(inputs)
 
         if self.bn_scale > 0.0:
-            assert teacher_bns
+            assert teacher_bns is not None
             loss += self.bn_scale * sum(teacher_bns)
 
         if self.comp_scale > 0.0:
-            assert student_output
+            assert student_output is not None
             loss += self.comp_scale * (1 - self.js_div(teacher_output, student_output))
 
         return loss
