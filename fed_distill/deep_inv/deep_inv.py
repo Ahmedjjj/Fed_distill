@@ -1,6 +1,6 @@
 import random
-from dataclasses import dataclass, field
-from typing import Any, Dict, Tuple, List, Union
+from dataclasses import dataclass
+from typing import List, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -57,22 +57,19 @@ class DeepInversion:
     input_shape: Tuple[int, int]
     class_sampler: TargetSampler
     loss: DeepInversionLoss
+    optimizer: torch.optim.Optimizer
     student_net: nn.Module = None
     batch_size: int = 256
     grad_updates_batch: int = 1000
-    input_jitter: bool = False
-    optimizer_class: torch.optim.Optimizer = torch.optim.Adam
-    optimizer_kwargs: Dict[str, Any] = field(default_factory=dict)
+    input_jitter: bool = True
     device: str = "cuda"
 
     def __post_init__(self) -> None:
-        self.inputs = torch.empty(
-            (self.batch_size, 3, *self.input_shape),
-            requires_grad=True,
-            device=self.device,
-        )
+        self.inputs = self.optimizer.param_groups[0]["params"][
+            0
+        ]  # extract initial matrix
+        assert self.inputs.shape == (self.batch_size, 3, *self.input_shape)
         self.class_sampler = iter(self.class_sampler)
-        self.optimizer = self.optimizer_class([self.inputs], **self.optimizer_kwargs)
         self.teacher_net.eval().to(self.device)
 
         if self.student_net:
@@ -103,11 +100,13 @@ class DeepInversion:
         best_inputs = self.inputs.data
         self._reset_optimizer()
         targets = next(self.class_sampler).to(self.device)
-        self.student_net.eval()
+
+        if self.student_net:
+            self.student_net.eval()
 
         losses = []
 
-        for _ in tqdm.tqdm(range(self.epochs)):
+        for _ in tqdm.tqdm(range(self.grad_updates_batch)):
             inputs = self.inputs
             if self.input_jitter:
                 inputs = input_jitter(inputs, 2, 2)
@@ -132,13 +131,74 @@ class DeepInversion:
             self.optimizer.step()
         if get_losses:
             return best_inputs, targets, losses
-        
+
         return best_inputs, targets
 
-    @property
-    def student_net(self):
-        return self.student_net
 
-    @property
-    def teacher_net(self):
-        return self.teacher_net
+class ResnetCifarDeepInversion(DeepInversion):
+    def __init__(
+        self,
+        teacher_net: nn.Module,
+        class_sampler: TargetSampler,
+        adam_lr: float,
+        l2_scale: float,
+        var_scale: float,
+        bn_scale: float,
+        batch_size: int = 256,
+        grad_updates_batch: int = 1000,
+        device="cuda",
+    ):
+        inputs = torch.randn((batch_size, 3, 32, 32), requires_grad=True, device="cuda")
+        optimizer = torch.optim.Adam([inputs], lr=adam_lr)
+        loss = DeepInversionLoss(
+            l2_scale=l2_scale, var_scale=var_scale, bn_scale=bn_scale, comp_scale=0.0
+        )
+        super().__init__(
+            teacher_net=teacher_net,
+            input_shape=(32, 32),
+            class_sampler=class_sampler,
+            loss=loss,
+            optimizer=optimizer,
+            student_net=None,
+            batch_size=batch_size,
+            grad_updates_batch=grad_updates_batch,
+            input_jitter=True,
+            device=device,
+        )
+
+
+class ResnetCifarAdaptiveDeepInversion(DeepInversion):
+    def __init__(
+        self,
+        teacher_net: nn.Module,
+        student_net: nn.Module,
+        class_sampler: TargetSampler,
+        adam_lr: float,
+        l2_scale: float,
+        var_scale: float,
+        bn_scale: float,
+        comp_scale: float,
+        batch_size: int = 256,
+        grad_updates_batch: int = 1000,
+        device="cuda",
+    ):
+        inputs = torch.randn((batch_size, 3, 32, 32), requires_grad=True, device="cuda")
+        optimizer = torch.optim.Adam([inputs], lr=adam_lr)
+        loss = DeepInversionLoss(
+            l2_scale=l2_scale,
+            var_scale=var_scale,
+            bn_scale=bn_scale,
+            comp_scale=comp_scale,
+        )
+        super().__init__(
+            teacher_net=teacher_net,
+            input_shape=(32, 32),
+            class_sampler=class_sampler,
+            loss=loss,
+            optimizer=optimizer,
+            student_net=student_net,
+            batch_size=batch_size,
+            grad_updates_batch=grad_updates_batch,
+            input_jitter=True,
+            device=device,
+        )
