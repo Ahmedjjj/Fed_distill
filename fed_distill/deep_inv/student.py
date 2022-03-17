@@ -2,17 +2,14 @@ import logging
 import os
 import random
 from dataclasses import dataclass, field
-from re import M
 from typing import List, Tuple
 
 import torch
 import torch.nn as nn
 from fed_distill.cifar10 import load_cifar10_test
-from fed_distill.deep_inv.deep_inv import (
-    DeepInversion,
-    ResnetCifarAdaptiveDeepInversion,
-    ResnetCifarDeepInversion,
-)
+from fed_distill.deep_inv.deep_inv import (DeepInversion,
+                                           ResnetCifarAdaptiveDeepInversion,
+                                           ResnetCifarDeepInversion)
 from fed_distill.deep_inv.sampler import TargetSampler
 from resnet_cifar import ResNet18
 from torch.utils.data import DataLoader, Dataset
