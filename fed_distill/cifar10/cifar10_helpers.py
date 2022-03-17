@@ -62,4 +62,3 @@ def get_balanced_targets(batch_size: int, num_classes=10) -> torch.Tensor:
     return torch.tensor([[i] * (batch_size // 10) for i in range(num_classes)]).reshape(
         -1
     )
-

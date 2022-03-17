@@ -112,4 +112,3 @@ class ResnetTrainer:
             },
             self.save_path,
         )
-

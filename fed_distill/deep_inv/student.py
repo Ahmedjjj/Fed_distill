@@ -27,7 +27,7 @@ class StudentTrainer:
     criterion: nn.Module
     optimizer: torch.optim.Optimizer
     scheduler: torch.optim.lr_scheduler._LRScheduler
-    student_net : nn.Module = None
+    student_net: nn.Module = None
     test_batch_size: int = 4098
     training_epochs: int = 250
     epoch_gradient_updates: int = 195
@@ -49,9 +49,9 @@ class StudentTrainer:
         self.student_train_accs_instanteneous = []
         self.teacher_train_accs_instanteneous = []
         self.student_train_accs = []
-        
+
         self.teacher_net = self.deep_inversion.teacher_net
-        
+
         if self.student_net == None:
             self.student_net = self.deep_inversion.student_net
         self.student_net.to(self.device)
@@ -70,7 +70,8 @@ class StudentTrainer:
             num_correct = 0
             for input, targets in self.test_loader:
                 num_correct += torch.sum(
-                    self.student_net(input.to(self.device)).argmax(dim=1) == targets.to(self.device)
+                    self.student_net(input.to(self.device)).argmax(dim=1)
+                    == targets.to(self.device)
                 )
             return float(num_correct / len(self.test_dataset))
 
@@ -121,8 +122,11 @@ class StudentTrainer:
         }
         torch.save(
             state_dict,
-            os.path.join(self.save_folder, self.save_prefix + f"_epoch{self.epoch}.tar"),
+            os.path.join(
+                self.save_folder, self.save_prefix + f"_epoch{self.epoch}.tar"
+            ),
         )
+
     def _get_batch(self):
         logger.info(f"Generating data batch {self.current_batch + 1}")
         self.student_net.eval()
@@ -131,7 +135,7 @@ class StudentTrainer:
         new_targets = new_targets.detach().cpu()
         if self.save_images:
             self._save_batch(new_inputs, new_targets)
-        self.current_batch +=1
+        self.current_batch += 1
         return new_inputs, new_targets
 
     def train_epoch(self):
@@ -185,7 +189,7 @@ class ResnetCifarStudentTrainer(StudentTrainer):
         self,
         teacher_net: nn.Module,
         class_sampler: TargetSampler,
-        initial_batches = [],
+        initial_batches=[],
         num_initial_batches: int = 50,
         data_root: str = ".",
         adam_lr: float = 0.1,
@@ -232,14 +236,18 @@ class ResnetCifarStudentTrainer(StudentTrainer):
                 torch.save(
                     {"images": images, "labels": targets},
                     os.path.join(
-                        imgs_save_folder, save_prefix + f"_initial_batch{i + 1}.tar",
+                        imgs_save_folder,
+                        save_prefix + f"_initial_batch{i + 1}.tar",
                     ),
                 )
 
         student_net = ResNet18()
-        optimizer = torch.optim.SGD(student_net.parameters(), lr=0.1, weight_decay=10e-3, momentum=0.9)
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=lr_decay_milestones, gamma=0.1)
-
+        optimizer = torch.optim.SGD(
+            student_net.parameters(), lr=0.1, weight_decay=10e-3, momentum=0.9
+        )
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(
+            optimizer, milestones=lr_decay_milestones, gamma=0.1
+        )
 
         if comp_scale > 0.0:
             deep_inv = ResnetCifarAdaptiveDeepInversion(
