@@ -7,9 +7,11 @@ from typing import List, Tuple
 import torch
 import torch.nn as nn
 from fed_distill.cifar10 import load_cifar10_test
-from fed_distill.deep_inv.deep_inv import (DeepInversion,
-                                           ResnetCifarAdaptiveDeepInversion,
-                                           ResnetCifarDeepInversion)
+from fed_distill.deep_inv.deep_inv import (
+    DeepInversion,
+    ResnetCifarAdaptiveDeepInversion,
+    ResnetCifarDeepInversion,
+)
 from fed_distill.deep_inv.sampler import TargetSampler
 from resnet_cifar import ResNet18
 from torch.utils.data import DataLoader, Dataset
@@ -86,7 +88,7 @@ class StudentTrainer:
         self.optimizer.zero_grad()
         self.student_net.train()
         output = self.student_net(inputs.to(self.device))
-        loss = self.criterion(output.to, targets.to(self.device))
+        loss = self.criterion(output.to(self.device), targets.to(self.device))
         loss.backward()
         self.optimizer.step()
 
@@ -198,7 +200,7 @@ class ResnetCifarStudentTrainer(StudentTrainer):
         grad_updates_batch: int = 1000,
         test_batch_size: int = 4098,
         training_epochs: int = 300,
-        lr_decay_milestones: List[int] = [250, 300],
+        lr_decay_milestones: List[int] = [150, 250],
         epoch_gradient_updates: int = 195,
         device: str = "cuda",
         save_prefix: str = "",
@@ -233,14 +235,13 @@ class ResnetCifarStudentTrainer(StudentTrainer):
                 torch.save(
                     {"images": images, "labels": targets},
                     os.path.join(
-                        imgs_save_folder,
-                        save_prefix + f"_initial_batch{i + 1}.tar",
+                        imgs_save_folder, save_prefix + f"_initial_batch{i + 1}.tar",
                     ),
                 )
 
         student_net = ResNet18()
         optimizer = torch.optim.SGD(
-            student_net.parameters(), lr=0.1, weight_decay=10e-3, momentum=0.9
+            student_net.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4
         )
         scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer, milestones=lr_decay_milestones, gamma=0.1
