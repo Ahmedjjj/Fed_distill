@@ -71,7 +71,7 @@ class DeepInversion:
         assert self.inputs.shape == (self.batch_size, 3, *self.input_shape)
         self.class_sampler = iter(self.class_sampler)
         self.teacher_net.eval().to(self.device)
-
+        self.non_adaptive_loss = self.loss.get_non_adaptive()
         if self.student_net:
             self.student_net.to(self.device)
 
@@ -84,12 +84,26 @@ class DeepInversion:
         for group in self.optimizer.param_groups:
             group.update(self.optimizer.defaults)
 
+    def set_teacher(self, model: nn.Module) -> None:
+        self.teacher_net = model
+        self.teacher_net.eval().to(self.device)
+        self.bn_losses = []
+        for module in self.teacher_net.modules():
+            if isinstance(module, nn.BatchNorm2d):
+                self.bn_losses.append(DeepInversionFeatureHook(module))
+
+    def set_student(self, model: nn.Module) -> None:
+        self.student_net = model
+        self.student_net.eval().to(self.device)
+
     def compute_batch(
-        self, get_losses: bool = False
+        self, get_losses: bool = False,
+        adaptive=True,
     ) -> Union[
         Tuple[torch.Tensor, torch.Tensor],
         Tuple[torch.Tensor, torch.Tensor, List[float]],
     ]:
+        loss_f = self.loss if adaptive else self.non_adaptive_loss
         self.inputs.data = torch.randn(
             (self.batch_size, 3, *self.input_shape),
             requires_grad=True,
@@ -118,7 +132,7 @@ class DeepInversion:
                 student_output = self.student_net(inputs)
             teacher_bns = [mod.r_feature for mod in self.bn_losses]
 
-            loss = self.loss(
+            loss = loss_f(
                 inputs, targets, teacher_output, teacher_bns, student_output
             )
             losses.append(float(loss))
@@ -133,72 +147,3 @@ class DeepInversion:
             return best_inputs, targets, losses
 
         return best_inputs, targets
-
-
-class ResnetCifarDeepInversion(DeepInversion):
-    def __init__(
-        self,
-        teacher_net: nn.Module,
-        class_sampler: TargetSampler,
-        adam_lr: float,
-        l2_scale: float,
-        var_scale: float,
-        bn_scale: float,
-        batch_size: int = 256,
-        grad_updates_batch: int = 1000,
-        device="cuda",
-    ):
-        inputs = torch.randn((batch_size, 3, 32, 32), requires_grad=True, device="cuda")
-        optimizer = torch.optim.Adam([inputs], lr=adam_lr)
-        loss = DeepInversionLoss(
-            l2_scale=l2_scale, var_scale=var_scale, bn_scale=bn_scale, comp_scale=0.0
-        )
-        super().__init__(
-            teacher_net=teacher_net,
-            input_shape=(32, 32),
-            class_sampler=class_sampler,
-            loss=loss,
-            optimizer=optimizer,
-            student_net=None,
-            batch_size=batch_size,
-            grad_updates_batch=grad_updates_batch,
-            input_jitter=True,
-            device=device,
-        )
-
-
-class ResnetCifarAdaptiveDeepInversion(DeepInversion):
-    def __init__(
-        self,
-        teacher_net: nn.Module,
-        student_net: nn.Module,
-        class_sampler: TargetSampler,
-        adam_lr: float,
-        l2_scale: float,
-        var_scale: float,
-        bn_scale: float,
-        comp_scale: float,
-        batch_size: int = 256,
-        grad_updates_batch: int = 1000,
-        device="cuda",
-    ):
-        inputs = torch.randn((batch_size, 3, 32, 32), requires_grad=True, device="cuda")
-        optimizer = torch.optim.Adam([inputs], lr=adam_lr)
-        loss = DeepInversionLoss(
-            l2_scale=l2_scale,
-            var_scale=var_scale,
-            bn_scale=bn_scale,
-            comp_scale=comp_scale,
-        )
-        super().__init__(
-            teacher_net=teacher_net,
-            input_shape=(32, 32),
-            class_sampler=class_sampler,
-            loss=loss,
-            optimizer=optimizer,
-            student_net=student_net,
-            batch_size=batch_size,
-            grad_updates_batch=grad_updates_batch,
-            input_jitter=True,
-            device=device,
-        )

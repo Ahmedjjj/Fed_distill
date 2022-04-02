@@ -54,6 +54,7 @@ class DeepInversionLoss(nn.Module):
         self.comp_scale = comp_scale
         self.criterion = nn.CrossEntropyLoss()
         self.js_div = JensonShannonDiv(softmax_temp)
+        self.softmax_temp = softmax_temp
 
     def forward(
         self,
@@ -79,3 +80,12 @@ class DeepInversionLoss(nn.Module):
             loss += self.comp_scale * (1 - self.js_div(teacher_output, student_output))
 
         return loss
+
+    def get_non_adaptive(self):
+        return DeepInversionLoss(
+            l2_scale=self.l2_scale,
+            var_scale=self.var_scale,
+            bn_scale=self.bn_scale,
+            comp_scale=0.0,
+            softmax_temp=self.softmax_temp,
+        )

@@ -1,12 +1,13 @@
 import random
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import torch
 from fed_distill import cifar10
 
 
 class TargetSampler(ABC):
-    def __iter__():
+    @abstractmethod
+    def __iter__(self):
         raise NotImplementedError()
 
 
