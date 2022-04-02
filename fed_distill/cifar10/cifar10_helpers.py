@@ -29,6 +29,17 @@ def load_cifar10_test(root: str) -> torch.utils.data.Dataset:
     transform = T.Compose([T.ToTensor(), T.Normalize(CIFAR10_MEAN, CIFAR10_STD)])
     return CIFAR10(root=root, train=False, transform=transform)
 
+def load_cifar10_train(root: str) -> torch.utils.data.Dataset:
+    train_transform = T.Compose(
+        [
+            T.RandomCrop(32, padding=4),
+            T.RandomHorizontalFlip(),
+            T.ToTensor(),
+            T.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ]
+    )
+    train_dataset = CIFAR10(root, transform=train_transform, download=True)
+    return train_dataset
 
 def prepare_to_visualize(img: torch.Tensor) -> np.array:
     mean, std = np.array(CIFAR10_MEAN), np.array(CIFAR10_STD)
@@ -62,3 +73,7 @@ def get_balanced_targets(batch_size: int, num_classes=10) -> torch.Tensor:
     return torch.tensor([[i] * (batch_size // 10) for i in range(num_classes)]).reshape(
         -1
     )
+
+
+
+
