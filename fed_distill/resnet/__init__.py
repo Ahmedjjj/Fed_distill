@@ -1,1 +1,3 @@
-from fed_distill.resnet.trainer import ResnetTrainer
+import imp
+from fed_distill.resnet.deep_inv import ResnetCifarDeepInversion, ResnetCifarAdaptiveDeepInversion 
+from fed_distill.resnet.student import ResnetCifarStudentTrainer
