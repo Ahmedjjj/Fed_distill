@@ -24,7 +24,7 @@ def get_class_name(label: int) -> str:
 
 def load_cifar10_test(root: str) -> torch.utils.data.Dataset:
     transform = T.Compose([T.ToTensor(), T.Normalize(CIFAR10_MEAN, CIFAR10_STD)])
-    return CIFAR10(root=root, train=False, transform=transform)
+    return CIFAR10(root=root, train=False, transform=transform, download=True)
 
 
 def load_cifar10_train(root: str) -> torch.utils.data.Dataset:
