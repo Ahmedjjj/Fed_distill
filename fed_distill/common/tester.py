@@ -24,7 +24,7 @@ class AccuracyTester(Tester):
         self.len_test = len(dataset)
         self.device = device
 
-    def __call__(self, model: nn.Module, **kwargs) -> float:
+    def __call__(self, model: nn.Module) -> float:
         model.eval()
         with torch.no_grad():
             num_correct = 0
