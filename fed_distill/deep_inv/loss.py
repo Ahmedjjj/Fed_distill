@@ -82,10 +82,19 @@ class DeepInversionLoss(nn.Module):
         return loss
 
     def get_non_adaptive(self):
-        return DeepInversionLoss(
+        return NonAdaptiveDeepInversionLoss(
             l2_scale=self.l2_scale,
             var_scale=self.var_scale,
             bn_scale=self.bn_scale,
-            comp_scale=0.0,
             softmax_temp=self.softmax_temp,
         )
+
+class NonAdaptiveDeepInversionLoss(DeepInversionLoss):
+    def __init__(
+        self,
+        l2_scale: float = 0.0,
+        var_scale: float = 5e-5,
+        bn_scale: float = 10,
+        softmax_temp: float = 3,
+    ):
+        super().__init__(l2_scale=l2_scale, var_scale=var_scale, bn_scale=bn_scale, softmax_temp=softmax_temp)
