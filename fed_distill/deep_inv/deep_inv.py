@@ -86,9 +86,9 @@ class DeepInversion:
 
         # Initialize input randomly
         self.inputs.data = torch.randn(
-            (self.batch_size, 3, *self.input_shape),
+            self.inputs.shape,
             requires_grad=True,
-            device=self.device,
+            device=self.inputs.device,
         )
 
         # Register teacher feature hooks
@@ -137,6 +137,6 @@ class NonAdaptiveDeepInversion(DeepInversion):
     loss: NonAdaptiveDeepInversionLoss
 
     def compute_batch(
-        self, teacher_net: nn.Module, student_net: nn.Module = None
+        self, teacher_net: nn.Module
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         return super().compute_batch(teacher_net, student_net=None)

@@ -15,9 +15,9 @@ class BalancedSampler(TargetSampler):
     def __init__(self, batch_size: int, num_classes: int) -> None:
         if not batch_size % num_classes == 0:
             raise ValueError("Batch size has to be a multiple of the number of classes")
-        self.targets = torch.tensor([[i] * (batch_size // 10) for i in range(num_classes)]).reshape(
-        -1
-    )
+        self.targets = torch.tensor(
+            [[i] * (batch_size // 10) for i in range(num_classes)]
+        ).reshape(-1)
 
     def __iter__(self):
         while True:
