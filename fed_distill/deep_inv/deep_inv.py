@@ -1,11 +1,11 @@
 import random
 from dataclasses import dataclass
-from typing import List, Tuple, Union
+from typing import Tuple
 
 import torch
 import torch.nn as nn
 import tqdm
-from fed_distill.deep_inv.loss import DeepInversionLoss
+from fed_distill.deep_inv.loss import DeepInversionLoss, NonAdaptiveDeepInversionLoss
 from fed_distill.deep_inv.sampler import TargetSampler
 
 
@@ -53,72 +53,57 @@ def input_jitter(inputs: torch.Tensor, lim_x, lim_y) -> torch.Tensor:
 
 @dataclass
 class DeepInversion:
-    teacher_net: nn.Module
-    input_shape: Tuple[int, int]
-    class_sampler: TargetSampler
     loss: DeepInversionLoss
     optimizer: torch.optim.Optimizer
-    student_net: nn.Module = None
+    class_sampler: TargetSampler
     batch_size: int = 256
     grad_updates_batch: int = 1000
     input_jitter: bool = True
-    device: str = "cuda"
 
     def __post_init__(self) -> None:
         self.inputs = self.optimizer.param_groups[0]["params"][
             0
         ]  # extract initial matrix
-        assert self.inputs.shape == (self.batch_size, 3, *self.input_shape)
         self.class_sampler = iter(self.class_sampler)
-        self.teacher_net.eval().to(self.device)
-        self.non_adaptive_loss = self.loss.get_non_adaptive()
-        if self.student_net:
-            self.student_net.to(self.device)
 
+    def _prepare_teacher(self, teacher_net: nn.Module):
         self.bn_losses = []
-        for module in self.teacher_net.modules():
+        for module in teacher_net.modules():
             if isinstance(module, nn.BatchNorm2d):
                 self.bn_losses.append(DeepInversionFeatureHook(module))
+
+    def _cleanup_hooks(self):
+        for feature_hook in self.bn_losses:
+            feature_hook.close()
 
     def _reset_optimizer(self) -> None:
         for group in self.optimizer.param_groups:
             group.update(self.optimizer.defaults)
 
-    def set_teacher(self, model: nn.Module) -> None:
-        self.teacher_net = model
-        self.teacher_net.eval().to(self.device)
-        self.bn_losses = []
-        for module in self.teacher_net.modules():
-            if isinstance(module, nn.BatchNorm2d):
-                self.bn_losses.append(DeepInversionFeatureHook(module))
-
-    def set_student(self, model: nn.Module) -> None:
-        self.student_net = model
-        self.student_net.eval().to(self.device)
-
     def compute_batch(
-        self, get_losses: bool = False,
-        adaptive=True,
-    ) -> Union[
-        Tuple[torch.Tensor, torch.Tensor],
-        Tuple[torch.Tensor, torch.Tensor, List[float]],
-    ]:
-        loss_f = self.loss if adaptive else self.non_adaptive_loss
+        self, teacher_net: nn.Module, student_net: nn.Module = None
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+
+        # Initialize input randomly
         self.inputs.data = torch.randn(
             (self.batch_size, 3, *self.input_shape),
             requires_grad=True,
             device=self.device,
         )
 
+        # Register teacher feature hooks
+        self._prepare_teacher(teacher_net)
+
+        # prepare optimizer and targets
         best_cost = 1e6
         best_inputs = self.inputs.data
         self._reset_optimizer()
-        targets = next(self.class_sampler).to(self.device)
+        targets = next(self.class_sampler).to(self.inputs.device)
 
-        if self.student_net:
-            self.student_net.eval()
-
-        losses = []
+        # Both teacher and student need to be in eval mode
+        teacher_net.eval()
+        if student_net:
+            student_net.eval()
 
         for _ in tqdm.tqdm(range(self.grad_updates_batch)):
             inputs = self.inputs
@@ -126,16 +111,15 @@ class DeepInversion:
                 inputs = input_jitter(inputs, 2, 2)
 
             self.optimizer.zero_grad()
-            teacher_output = self.teacher_net(inputs)
+            teacher_output = teacher_net(inputs)
             student_output = None
-            if self.student_net:
-                student_output = self.student_net(inputs)
+            if student_net:
+                student_output = student_net(inputs)
             teacher_bns = [mod.r_feature for mod in self.bn_losses]
 
-            loss = loss_f(
+            loss = self.loss(
                 inputs, targets, teacher_output, teacher_bns, student_output
             )
-            losses.append(float(loss))
 
             if best_cost > loss.item():
                 best_cost = loss.item()
@@ -143,7 +127,16 @@ class DeepInversion:
 
             loss.backward()
             self.optimizer.step()
-        if get_losses:
-            return best_inputs, targets, losses
 
+        self._cleanup_hooks()
         return best_inputs, targets
+
+
+@dataclass
+class NonAdaptiveDeepInversion(DeepInversion):
+    loss: NonAdaptiveDeepInversionLoss
+
+    def compute_batch(
+        self, teacher_net: nn.Module, student_net: nn.Module = None
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        return super().compute_batch(teacher_net, student_net=None)
