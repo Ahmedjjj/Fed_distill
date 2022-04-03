@@ -5,6 +5,7 @@ import numpy as np
 
 
 class DataSplitter(ABC):
+    @abstractmethod
     def split(self, num_nodes: int) -> List[Dataset]:
         raise NotImplementedError
 
