@@ -1,4 +1,4 @@
-from fed_distill.cifar10.cifar10_helpers import (
+from fed_distill.cifar10.helpers import (
     CIFAR10_MEAN,
     CIFAR10_STD,
     get_class_name,
