@@ -42,12 +42,19 @@ class AccuracyTrainer(Trainer):
         self.result_model.load_state_dict(self.best_model)
         return self.result_model
 
-    def train_for(self, num_epochs: int = 1) -> None:
+    def train_for(self, num_epochs: int = 1) -> Dict[str, Any]:
+        base_training_dict = {}
         for _ in range(num_epochs):
-            self.base.train_epoch()
+            base_training_dict = self.base.train_epoch()
             model = self.base.model
             accuracy = self.tester(model)
+            self.test_accs.append(accuracy)
             logger.info("Accuracy: %d", accuracy)
             if accuracy > self.best_acc:
                 self.best_acc = accuracy
                 self.best_model = deepcopy(model.state_dict())
+
+        final_dict_copy = deepcopy(base_training_dict)
+        final_dict_copy["test_accs"] = self.test_accs
+        return final_dict_copy
+        
