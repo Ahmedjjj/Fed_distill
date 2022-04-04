@@ -28,4 +28,5 @@ class AccuracyTester(Tester):
                 result = model(images.to(self.device))
                 pred = result.argmax(1)
                 num_correct += (pred == labels.to(self.device)).sum()
+            
             return float(num_correct / self.len_test)

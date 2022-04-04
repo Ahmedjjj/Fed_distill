@@ -22,8 +22,8 @@ class Trainer(ABC):
     def model(self) -> nn.Module:
         raise NotImplementedError()
 
-    def train_epoch(self) -> None:
-        self.train_for(1)
+    def train_epoch(self) ->  Dict[str, Any]:
+        return self.train_for(1)
 
 
 @dataclass
@@ -41,6 +41,7 @@ class BasicTrainer(Trainer):
     ) -> None:
         self.loader = DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True)
         self.train_metrics = {"train_losses": []}
+        self.epoch = 1
 
     def _train_batch(self, images, labels) -> float:
         self.optimizer.zero_grad()
@@ -53,6 +54,7 @@ class BasicTrainer(Trainer):
     def train_for(self, num_epochs: int = 1) -> None:
         self.model.train()
         for _ in range(num_epochs):
+            logger.info(f"Training epoch %i", self.epoch)
             epoch_loss = 0
             num_batches = 0
             for images, labels in self.loader:
@@ -61,6 +63,7 @@ class BasicTrainer(Trainer):
             epoch_loss /= num_batches
             self.train_metrics["train_losses"].append(epoch_loss)
             self.scheduler.step()
+            self.epoch += 1
         return self.train_metrics
 
     @property
@@ -94,7 +97,7 @@ class AccuracyTrainer(Trainer):
             model = self.base.model
             accuracy = self.tester(model)
             self.test_accs.append(accuracy)
-            logger.info("Accuracy: %d", accuracy)
+            logger.info("Testing accuracy: %f", accuracy)
             if accuracy > self.best_acc:
                 self.best_acc = accuracy
                 self.best_model = deepcopy(model.state_dict())

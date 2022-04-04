@@ -11,39 +11,41 @@ logger = logging.getLogger(__name__)
 
 class GrowingDataset(Dataset):
     def __init__(self, base_dataset: Dataset, transform: Callable) -> None:
-        self.dataset = base_dataset
+        self.base_dataset = base_dataset
         self.transform = transform
         self.last_batch = None
-        self.new_batch_min_index = len(self.dataset)
+        self.new_images = None
+        self.new_labels = None
+        self.new_batch_min_index = len(self.base_dataset)
 
     def __getitem__(self, k) -> torch.Tensor:
-        images, labels = self.dataset[k]
-        return (
-            (images, labels)
-            if k > self.new_batch_min_index
-            else (self.transform(images), labels)
-        )
+        if k < self.new_batch_min_index:
+            image, label = self.base_dataset[k]
+        else: 
+            image, label = self.new_images[k - self.new_batch_min_index], self.new_labels[k - self.new_batch_min_index]
+            image = self.transform(image)
+
+        if isinstance(label, int):
+            label = torch.tensor(label)
+        return image, label
 
     def __len__(self) -> int:
-        return len(self.dataset)
+        return len(self.base_dataset) + (self.new_images.shape[0] if self.new_images is not None else 0) 
 
     def add_batch(self, images: torch.Tensor, labels: torch.Tensor) -> None:
-        self.dataset += TensorDataset(images.detach().cpu(), labels.detach().cpu())
+        images = images.detach().cpu()
+        labels = labels.detach().cpu()
+        
+        self.new_images = torch.cat((self.new_images, images)) if self.new_images is not None else images
+        self.new_labels = torch.cat((self.new_labels, labels)) if self.new_labels is not None else labels
         self.last_batch = images, labels
 
     def get_last_batch(self) -> Tuple[torch.Tensor, torch.Tensor]:
         return self.transform(self.last_batch[0]), self.last_batch[1]
 
     def save(self, path: PathLike) -> None:
-        new_images = []
-        new_labels = []
-        for k in range(self.new_batch_min_index, len(self.dataset)):
-            images, labels = self.dataset[k]
-            new_images.append(images)
-            new_labels.append(labels)
-
         torch.save(
-            {"images": torch.cat(new_images), "labels": torch.cat(new_labels)}, path
+            {"images": self.new_images, "labels": self.new_labels}, path
         )
 
 
@@ -63,17 +65,14 @@ class DeepInversionGrowingDataset(GrowingDataset):
             deep_inversion (DeepInversion): _description_
             num_initial_batches (int): _description_
         """
+        super().__init__(base_dataset=base_dataset, transform=transform)
+
         logger.info("Generating %i initial batches", num_initial_batches)
         all_images, all_labels = [], []
         for batch in range(num_initial_batches):
             logger.info("Generating initial batch %i", batch)
-
             images, labels = deep_inversion.compute_batch(teacher_net)
             all_images.append(images.detach().cpu())
             all_labels.append(labels.detach().cpu())
 
-        initial_dataset = base_dataset + TensorDataset(
-            torch.cat(images), torch.cat(labels)
-        )
-        super().__init__(base_dataset=initial_dataset, transform=transform)
-        self.new_batch_min_index = len(base_dataset)
+        self.add_batch(torch.cat(all_images), torch.cat(all_labels))
