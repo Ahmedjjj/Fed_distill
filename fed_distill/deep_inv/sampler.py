@@ -33,6 +33,7 @@ class BalancedSampler(TargetSampler):
         while True:
             yield self.__targets
 
+
 class WeightedSampler(TargetSampler):
     def __init__(
         self,
@@ -41,7 +42,7 @@ class WeightedSampler(TargetSampler):
         p: Optional[Iterable[float]] = None,
     ) -> None:
         super().__init__(batch_size, classes)
-        self.p = p
+        self.p = tuple(p)
 
     def __iter__(self) -> Iterator[torch.Tensor]:
         while True:
@@ -60,5 +61,5 @@ def probs_from_labels(labels: Iterable[int]) -> Dict[int, float]:
     probs = dict()
     for k, v in counter.items():
         probs[k] = v / len(labels)
-    
+
     return probs
