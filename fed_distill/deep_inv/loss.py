@@ -46,7 +46,7 @@ class DeepInversionLoss(nn.Module):
         bn_scale: float = 10,
         comp_scale: float = 0.0,
         softmax_temp: float = 3,
-    ):
+    ) -> None:
         super().__init__()
         self.l2_scale = l2_scale
         self.var_scale = var_scale
@@ -97,7 +97,7 @@ class NonAdaptiveDeepInversionLoss(DeepInversionLoss):
         var_scale: float = 5e-5,
         bn_scale: float = 10,
         softmax_temp: float = 3,
-    ):
+    ) -> None:
         super().__init__(
             l2_scale=l2_scale,
             var_scale=var_scale,
