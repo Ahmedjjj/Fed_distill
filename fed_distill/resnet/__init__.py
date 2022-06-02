@@ -1,1 +1,1 @@
-from fed_distill.resnet.deep_inv import get_resnet_cifar_adi, get_resnet_cifar_di
+from fed_distill.resnet.resnet import ResNet18
