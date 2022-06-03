@@ -130,5 +130,4 @@ dmypy.json
 
 model_weights/*
 .vscode/
-data/
 notebooks/
