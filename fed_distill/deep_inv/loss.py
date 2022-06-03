@@ -38,7 +38,7 @@ class JensonShannonDiv(nn.Module):
         return torch.clamp(loss, 0.0, 1.0)
 
 
-class DeepInversionLoss(nn.Module):
+class ADILoss(nn.Module):
     def __init__(
         self,
         l2_scale: float = 0.0,
@@ -82,7 +82,7 @@ class DeepInversionLoss(nn.Module):
         return loss
 
     def get_non_adaptive(self):
-        return NonAdaptiveDeepInversionLoss(
+        return DILoss(
             l2_scale=self.l2_scale,
             var_scale=self.var_scale,
             bn_scale=self.bn_scale,
@@ -90,7 +90,7 @@ class DeepInversionLoss(nn.Module):
         )
 
 
-class NonAdaptiveDeepInversionLoss(DeepInversionLoss):
+class DILoss(ADILoss):
     def __init__(
         self,
         l2_scale: float = 0.0,

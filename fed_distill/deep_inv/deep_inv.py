@@ -6,8 +6,7 @@ import torch
 import torch.nn as nn
 import tqdm
 
-from fed_distill.deep_inv.loss import (DeepInversionLoss,
-                                       NonAdaptiveDeepInversionLoss)
+from fed_distill.deep_inv.loss import ADILoss, DILoss
 from fed_distill.data.label_sampler import TargetSampler
 
 
@@ -50,8 +49,8 @@ class DeepInversionFeatureHook:
 
 
 @dataclass
-class DeepInversion:
-    loss: DeepInversionLoss
+class AdaptiveDeepInversion:
+    loss: ADILoss
     optimizer: torch.optim.Optimizer
     teacher: nn.Module
     student: Optional[nn.Module] = None
@@ -137,11 +136,21 @@ class DeepInversion:
             yield self.__call__(targets)
 
 
-@dataclass
-class NonAdaptiveDeepInversion(DeepInversion):
-    loss: NonAdaptiveDeepInversionLoss
-
-    def __post_init__(self) -> None:
-        self.student = None
-        super().__post_init__()
+class DeepInversion(AdaptiveDeepInversion):
+    def __init__(
+        self,
+        loss: DILoss,
+        optimizer: torch.optim.Optimizer,
+        teacher: nn.Module,
+        grad_updates_batch: int = 1000,
+        input_jitter: bool = True,
+    ):
+        super().__init__(
+            loss=loss,
+            optimizer=optimizer,
+            teacher=teacher,
+            student=None,
+            grad_updates_batch=grad_updates_batch,
+            input_jitter=input_jitter,
+        )
 
