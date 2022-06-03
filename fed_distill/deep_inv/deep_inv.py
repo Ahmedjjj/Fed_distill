@@ -8,7 +8,7 @@ import tqdm
 
 from fed_distill.deep_inv.loss import (DeepInversionLoss,
                                        NonAdaptiveDeepInversionLoss)
-from fed_distill.deep_inv.sampler import TargetSampler
+from fed_distill.data.label_sampler import TargetSampler
 
 
 # This class taken from: https://github.com/NVlabs/DeepInversion/blob/master/cifar10/deepinversion_cifar10.py

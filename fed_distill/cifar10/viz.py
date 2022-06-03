@@ -2,7 +2,7 @@ import numpy as np
 import torch
 import torchvision.transforms as T
 
-from fed_distill.cifar10.helpers import CIFAR10_MEAN, CIFAR10_STD
+from fed_distill.cifar10.constants import CIFAR10_MEAN, CIFAR10_STD
 
 
 def prepare_to_visualize(img: torch.Tensor) -> np.ndarray:
