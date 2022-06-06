@@ -43,8 +43,12 @@ class Trainer:
             images = images.to(self.device)
             labels = labels.to(self.device)
 
+            if torch.isnan(images).any() or torch.isinf(images).any():
+                print("Nan input detected")
             self.optimizer.zero_grad()
             prediction = self.model(images)
+            if torch.isnan(prediction).any() or torch.isinf(prediction).any():
+                print("Nan prediction detected")
             loss = self.criterion(prediction, labels)
             loss.backward()
             self.optimizer.step()
@@ -52,8 +56,8 @@ class Trainer:
             epoch_loss += float(loss) * len(labels)
             epoch_acc += get_batch_accuracy(self.model, images, labels) * len(labels)
 
-        epoch_loss /= len(self.loader)
-        epoch_acc /= len(self.loader)
+        epoch_loss /= len(self.loader.dataset)
+        epoch_acc /= len(self.loader.dataset)
         self._metrics["training_loss"].append(epoch_loss)
         self._metrics["training_acc"].append(epoch_acc)
         logger.info("Training loss %f", epoch_loss)
