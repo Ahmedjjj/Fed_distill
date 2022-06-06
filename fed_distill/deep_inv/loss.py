@@ -81,15 +81,6 @@ class ADILoss(nn.Module):
 
         return loss
 
-    def get_non_adaptive(self):
-        return DILoss(
-            l2_scale=self.l2_scale,
-            var_scale=self.var_scale,
-            bn_scale=self.bn_scale,
-            softmax_temp=self.softmax_temp,
-        )
-
-
 class DILoss(ADILoss):
     def __init__(
         self,

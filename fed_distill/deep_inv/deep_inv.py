@@ -89,7 +89,8 @@ class AdaptiveDeepInversion:
         self.inputs.data = torch.randn(
             self.inputs.shape, requires_grad=True, device=self.inputs.device,
         )
-
+        targets = targets.to(self.inputs.device)
+        
         # Register teacher feature hooks
         self._prepare_teacher(self.teacher)
 
