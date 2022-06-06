@@ -10,7 +10,7 @@ class TargetSampler(ABC):
     def __init__(self, batch_size: int, classes: Union[int, Iterable[int]]) -> None:
         self.batch_size = batch_size
         if isinstance(classes, int):
-            self.classes = range(classes)
+            self.classes = tuple(range(classes))
         else:
             self.classes = tuple(set(classes))
 
@@ -42,7 +42,7 @@ class WeightedSampler(TargetSampler):
         p: Optional[Iterable[float]] = None,
     ) -> None:
         super().__init__(batch_size, classes)
-        self.p = tuple(p)
+        self.p = tuple(p) if p else None
 
     def __iter__(self) -> Iterator[torch.Tensor]:
         while True:
@@ -57,6 +57,7 @@ class RandomSampler(WeightedSampler):
 
 
 def probs_from_labels(labels: Iterable[int]) -> Dict[int, float]:
+    labels = tuple(labels)
     counter = Counter(labels)
     probs = dict()
     for k, v in counter.items():

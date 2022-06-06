@@ -1,7 +1,9 @@
 import logging
 import math
 from abc import ABC, abstractmethod
-from typing import Callable, Iterable, Iterator, Optional, Tuple, Union
+from os import PathLike
+import os
+from typing import Callable, Iterable, Iterator, List, Optional, Set, Tuple, Union
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -9,22 +11,22 @@ from torch.utils.data import DataLoader, Dataset
 logger = logging.getLogger(__name__)
 
 
-class GrowingDataset(ABC, Dataset[Tuple[torch.Tensor, int]]):
+class GrowingDataset(ABC, Dataset[Tuple[torch.Tensor, torch.Tensor]]):
     def __init__(
         self,
-        base_dataset: Optional[Dataset[Tuple[torch.Tensor, int]]] = None,
-        new_batch_transform: Optional[Callable[[torch.Tensor, torch.Tensor]]] = None,
+        base_dataset: Optional[Dataset[Tuple[torch.Tensor, torch.Tensor]]] = None,
+        new_batch_transform: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
     ) -> None:
         self.base = base_dataset if base_dataset else dict()
         self.transform = new_batch_transform if new_batch_transform else lambda x: x
 
         self._images = torch.empty(0)
-        self._labels = torch.empty(0)
+        self._labels = torch.empty(0).type(torch.LongTensor)
 
     def __len__(self) -> int:
         return len(self.base) + len(self._labels)
 
-    def __getitem__(self, index: int) -> Tuple[torch.Tensor, int]:
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         if index < len(self.base):
             return self.base[index]
         else:
@@ -35,11 +37,23 @@ class GrowingDataset(ABC, Dataset[Tuple[torch.Tensor, int]]):
     def _add_batch(self, images: torch.Tensor, labels: torch.Tensor) -> None:
         self._images = torch.cat((self._images, images))
         self._labels = torch.cat((self._labels, labels))
+        print(self._labels.device)
 
     @abstractmethod
-    def grow(self) -> Tuple[torch.Tensor, int]:
+    def grow(self) -> Tuple[torch.Tensor, torch.Tensor]:
         raise NotImplementedError()
+    
+    def save(self, path: PathLike) -> None:
+        torch.save({"images": self._images, "labels": self._labels}, path)
 
+    def load(self, path: PathLike) -> bool:
+        if os.path.exists(path):
+            self._images, self._labels = torch.load(path).values()
+            logger.info("Successfully loaded %i images", len(self._labels))
+            return True
+        else:
+            logger.info("File does not exist, not loading any images...")
+            return False
 
 class DeepInversionDataset(GrowingDataset):
     def __init__(
@@ -48,8 +62,8 @@ class DeepInversionDataset(GrowingDataset):
             Iterator[Tuple[torch.Tensor, torch.Tensor]],
             Iterable[Iterator[Tuple[torch.Tensor, torch.Tensor]]],
         ],
-        base_dataset: Optional[Dataset[Tuple[torch.Tensor, int]]] = None,
-        new_batch_transform: Optional[Callable[[torch.Tensor, torch.Tensor]]] = None,
+        base_dataset: Optional[Dataset[Tuple[torch.Tensor, torch.Tensor]]] = None,
+        new_batch_transform: Optional[Callable[[torch.Tensor], torch.Tensor]] = None,
     ) -> None:
         super().__init__(base_dataset, new_batch_transform)
         if isinstance(di, Iterator):
@@ -57,9 +71,11 @@ class DeepInversionDataset(GrowingDataset):
         self.di = tuple(di)
         self._cur_teacher = 0
 
-    def grow(self) -> Tuple[torch.Tensor, int]:
+    def grow(self) -> Tuple[torch.Tensor, torch.Tensor]:
         logger.info("Generating new batch from teacher %i", self._cur_teacher)
         images, labels = next(self.di[self._cur_teacher])
+        images = images.cpu().detach()
+        labels = labels.cpu().detach()
         self._add_batch(images, labels)
         self._cur_teacher = (self._cur_teacher + 1) % len(self.di)
         return images, labels
@@ -79,21 +95,24 @@ class GrowingDatasetDataLoader(Iterable[Tuple[torch.Tensor, torch.Tensor]]):
         self._epoch_num_batches = math.floor(epoch_samples / batch_size)
         logger.info("Number of batches per epoch: %i", self._epoch_num_batches)
 
-        self._generation_steps = []
+        self._generation_steps = {}
         if new_batches_per_epoch > 0:
-            self._generation_steps = range(
+            self._generation_steps = set(range(
                 0,
                 self._epoch_num_batches,
                 math.ceil(self._epoch_num_batches / new_batches_per_epoch),
-            )
+            ))
 
         logger.info(
-            "Generating new batches at steps %s", str(tuple(self._generation_steps))
-        )
+            "Generating new batches at steps %s", str(self._generation_steps))
+        
 
         self._loader = DataLoader(
             self.dataset, batch_size=batch_size, shuffle=shuffle, **kwargs
         )
+    
+    def __len__(self) -> int:
+        return self._epoch_num_batches
 
     def __iter__(self) -> Iterator[Tuple[torch.Tensor, torch.Tensor]]:
         loader_iter = iter(self._loader)
