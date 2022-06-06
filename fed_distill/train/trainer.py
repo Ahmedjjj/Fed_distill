@@ -28,8 +28,7 @@ class Trainer:
     def __post_init__(self):
         self.criterion.to(self.device)
         self.model.to(self.device)
-        self._metrics = {"training_loss": []}
-        self._metrics = {"training_acc": []}
+        self._metrics = {"training_loss": [], "training_acc": []}
 
         if self.accuracy_criterion:
             self._metrics["test_acc"] = []

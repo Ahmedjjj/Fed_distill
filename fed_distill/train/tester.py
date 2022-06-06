@@ -4,8 +4,8 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch
 
-class AccuracyTester(Callable[[nn.Module], float]):
-    def __init__(self, loader: DataLoader, device: Union[torch.device, str]="str") -> None:
+class AccuracyTester:
+    def __init__(self, loader: DataLoader, device: Union[torch.device, str]="cuda") -> None:
         self.loader = loader
         self.device = device
     
