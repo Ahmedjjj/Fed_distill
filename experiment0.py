@@ -31,7 +31,7 @@ def main() -> None:
     teacher.load_state_dict(torch.load("/mlodata1/jellouli/experiment0/teacher0.pt")["best_model"])
 
     test_set = CIFAR10("/mlodata1/jellouli", train=False, transform=CIFAR10_TEST_TRANSFORM)
-    tester = AccuracyTester(DataLoader(test_set, batch_size=4098))
+    tester = AccuracyTester(DataLoader(test_set, batch_size=2048))
     logger.info("Teacher accuracy %f", tester(teacher))
 
     # Deep Inversion
