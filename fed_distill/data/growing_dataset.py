@@ -110,10 +110,7 @@ class GrowingDatasetDataLoader(Iterable[Tuple[torch.Tensor, torch.Tensor]]):
         self._loader = DataLoader(
             self.dataset, batch_size=batch_size, shuffle=shuffle, **kwargs
         )
-    
-    def __len__(self) -> int:
-        return self._epoch_num_batches
-
+ 
     def __iter__(self) -> Iterator[Tuple[torch.Tensor, torch.Tensor]]:
         loader_iter = iter(self._loader)
 
