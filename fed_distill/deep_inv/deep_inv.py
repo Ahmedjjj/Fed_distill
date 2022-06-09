@@ -1,5 +1,5 @@
-from difflib import restore
 import random
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Iterator, Optional, Tuple
 
@@ -7,8 +7,9 @@ import torch
 import torch.nn as nn
 import tqdm
 
-from fed_distill.deep_inv.loss import ADILoss, DILoss
 from fed_distill.data.label_sampler import TargetSampler
+from fed_distill.deep_inv.loss import ADILoss, DILoss
+from fed_distill.train.tester import get_batch_accuracy
 
 
 # This class taken from: https://github.com/NVlabs/DeepInversion/blob/master/cifar10/deepinversion_cifar10.py
@@ -62,6 +63,9 @@ class AdaptiveDeepInversion:
         self.inputs = self.optimizer.param_groups[0]["params"][
             0
         ]  # extract initial matrix
+        self._metrics = {"instant_acc_teacher": []}
+        if self.student:
+            self._metrics["instant_acc_student":[]]
 
     def _prepare_teacher(self, teacher_net: nn.Module) -> None:
         self.bn_losses = []
@@ -91,7 +95,7 @@ class AdaptiveDeepInversion:
             self.inputs.shape, requires_grad=True, device=self.inputs.device,
         )
         targets = targets.to(self.inputs.device)
-        
+
         # Register teacher feature hooks
         self._prepare_teacher(self.teacher)
 
@@ -107,7 +111,6 @@ class AdaptiveDeepInversion:
         self.teacher.eval()
         if self.student:
             self.student.eval()
-    
 
         for _ in tqdm.tqdm(range(self.grad_updates_batch)):
             inputs = self.inputs
@@ -134,12 +137,24 @@ class AdaptiveDeepInversion:
 
         self._cleanup_hooks()
 
+        self._metrics["instant_acc_teacher"].append(
+            get_batch_accuracy(self.teacher, self.inputs, targets)
+        )
+        if self.student:
+            self._metrics["instant_acc_student"].append(
+                get_batch_accuracy(self.student, self.inputs, targets)
+            )
+
         if restore_teacher:
             self.teacher.train()
         if restore_student:
             self.student.train()
-        
+
         return best_inputs, targets
+
+    @property
+    def metrics(self):
+        return deepcopy(self._metrics)
 
     def iterator_from_sampler(
         self, sampler: TargetSampler
