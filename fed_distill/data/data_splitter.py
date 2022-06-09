@@ -1,37 +1,36 @@
-from abc import ABC, abstractmethod
-from typing import List
-from torch.utils.data import Dataset, Subset
+from typing import List, Tuple
+
 import numpy as np
+from torch.utils.data import Dataset, Subset
 
 
-class DataSplitter(ABC):
-    @abstractmethod
-    def split(self, num_nodes: int) -> List[Dataset]:
-        raise NotImplementedError
+def split_heter(
+    dataset: Dataset, num_nodes: int, unif_percentage: float
+) -> Tuple[Dataset]:
+    assert hasattr(dataset, "targets")
+
+    # Shuffle in order to get a random uniformly distributed
+    targets = np.random.permutation(range(len(dataset)))
+    unif_targets_indxs, heter_target_idxs = np.split(
+        targets, [int(len(dataset) * unif_percentage)]
+    )
+
+    unif_split = np.array_split(unif_targets_indxs, num_nodes)
+
+    sorted_targets = np.argsort(dataset.targets)
+    sorted_targets = sorted_targets[np.in1d(sorted_targets, heter_target_idxs)]
+    sorted_split = np.array_split(sorted_targets, num_nodes)
+
+    subsets = []
+
+    for (h, r) in zip(sorted_split, unif_split):
+        all_indices = np.concatenate((h, r))
+        subset = Subset(dataset, all_indices)
+        subset.targets = np.array(dataset.targets)[all_indices]
+        subsets.append(subset)
+
+    return tuple(subsets)
 
 
-class HeterogenousDistribution(DataSplitter):
-    def __init__(self, base_dataset: Dataset, unif_percentage=0.1):
-        self.base_dataset = base_dataset
-        self.unif_percentage = unif_percentage
-        self.len_heter = len(base_dataset) - int(len(base_dataset) * unif_percentage)
-
-    def split(self, num_nodes: int) -> List[Dataset]:
-        targets, unif_targets = np.split(
-            np.copy(self.base_dataset.targets), [self.len_heter]
-        )
-        sorted_targets = np.argsort(targets[: self.len_heter])
-        rng = np.random.default_rng(42)
-        unif_targets = rng.permutation(unif_targets)
-        subsets = []
-        sorted_split = np.array_split(sorted_targets, num_nodes)
-        unif_split = np.array_split(unif_targets, num_nodes)
-
-        for (h, r) in zip(sorted_split, unif_split):
-            all_indices = np.concatenate((h, r))
-            subset = Subset(self.base_dataset, all_indices)
-            subset.targets = np.array(self.base_dataset.targets)[all_indices]
-            subsets.append(subset)
-
-        return subsets
-
+def split_by_class(dataset: Dataset, num_nodes: int) -> Tuple[Dataset]:
+    return split_heter(dataset, num_nodes, 0.0)
