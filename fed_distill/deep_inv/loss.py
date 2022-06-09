@@ -1,4 +1,4 @@
-from typing import List
+from typing import Iterable, List, Optional
 
 import torch
 import torch.nn as nn
@@ -46,6 +46,7 @@ class ADILoss(nn.Module):
         bn_scale: float = 10,
         comp_scale: float = 0.0,
         softmax_temp: float = 3,
+        classes: Optional[Iterable[int]] = None
     ) -> None:
         super().__init__()
         self.l2_scale = l2_scale
@@ -55,6 +56,7 @@ class ADILoss(nn.Module):
         self.criterion = nn.CrossEntropyLoss()
         self.js_div = JensonShannonDiv(softmax_temp)
         self.softmax_temp = softmax_temp
+        self.classes = tuple(classes)
 
     def forward(
         self,
@@ -77,7 +79,10 @@ class ADILoss(nn.Module):
 
         if self.comp_scale > 0.0:
             assert student_output is not None
-            loss += self.comp_scale * (1 - self.js_div(teacher_output, student_output))
+            if not self.classes:
+                loss += self.comp_scale * (1 - self.js_div(teacher_output, student_output))
+            else:
+                loss += self.comp_scale * (1 - self.js_div(teacher_output[:, self.classes], student_output[:, self.classes]))
 
         return loss
 
