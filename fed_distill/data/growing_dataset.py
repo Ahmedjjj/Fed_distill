@@ -37,7 +37,6 @@ class GrowingDataset(ABC, Dataset[Tuple[torch.Tensor, torch.Tensor]]):
     def _add_batch(self, images: torch.Tensor, labels: torch.Tensor) -> None:
         self._images = torch.cat((self._images, images))
         self._labels = torch.cat((self._labels, labels))
-        print(self._labels.device)
 
     @abstractmethod
     def grow(self) -> Tuple[torch.Tensor, torch.Tensor]:
