@@ -1,3 +1,4 @@
+from difflib import restore
 import random
 from dataclasses import dataclass
 from typing import Iterator, Optional, Tuple
@@ -100,9 +101,13 @@ class AdaptiveDeepInversion:
         self._reset_optimizer()
 
         # Both teacher and student need to be in eval mode
+        restore_teacher = self.teacher.training
+        restore_student = self.student.training
+
         self.teacher.eval()
         if self.student:
             self.student.eval()
+    
 
         for _ in tqdm.tqdm(range(self.grad_updates_batch)):
             inputs = self.inputs
@@ -128,6 +133,12 @@ class AdaptiveDeepInversion:
             self.optimizer.step()
 
         self._cleanup_hooks()
+
+        if restore_teacher:
+            self.teacher.train()
+        if restore_student:
+            self.student.train()
+        
         return best_inputs, targets
 
     def iterator_from_sampler(
