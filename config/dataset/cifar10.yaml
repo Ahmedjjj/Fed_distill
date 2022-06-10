@@ -1,0 +1,11 @@
+train:
+  _target_: torchvision.datasets.CIFAR10
+  root: "/mlodata1/jellouli"
+  train: True
+  download: True
+    
+test:
+  _target_: torchvision.datasets.CIFAR10
+  root: "/mlodata1/jellouli"
+  train: False
+  download: True

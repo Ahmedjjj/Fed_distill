@@ -1,0 +1,24 @@
+di: 
+  _partial_: True
+  _target_: fed_distill.deep_inv.DeepInversion
+  loss:
+    _target_: fed_distill.deep_inv.DILoss
+    l2_scale: 3e-8
+    var_scale: 2.5e-5
+    bn_scale: 10
+  grad_updates_batch: 2000
+  input_jitter: True
+  
+
+adi:
+  _partial_: True
+  _target_: fed_distill.deep_inv.AdaptiveDeepInversion
+  loss:
+    _target_: fed_distill.deep_inv.ADILoss
+    l2_scale: 3e-8
+    var_scale: 2.5e-5
+    bn_scale: 10
+    comp_scale: 10
+  grad_updates_batch: 2000
+  input_jitter: True
+  

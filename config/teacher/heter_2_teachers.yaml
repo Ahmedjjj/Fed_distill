@@ -1,0 +1,9 @@
+defaults:
+  - defaults
+
+num_teachers: 1
+train_epochs: 300
+split_file: "/mlodata1/jellouli/experiments/data_split/heter_2_teachers.json"
+save_folder: "/mlodata1/jellouli/experiments/teachers/heter_2_teachers"
+
+seed: 42
