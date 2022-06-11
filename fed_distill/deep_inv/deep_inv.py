@@ -106,7 +106,8 @@ class AdaptiveDeepInversion:
 
         # Both teacher and student need to be in eval mode
         restore_teacher = self.teacher.training
-        restore_student = self.student.training
+        if self.student:
+            restore_student = self.student.training
 
         self.teacher.eval()
         if self.student:
