@@ -56,7 +56,9 @@ class ADILoss(nn.Module):
         self.criterion = nn.CrossEntropyLoss()
         self.js_div = JensonShannonDiv(softmax_temp)
         self.softmax_temp = softmax_temp
-        self.classes = tuple(classes)
+        self.classes = None
+        if classes:
+            self.classes = tuple(classes)
 
     def forward(
         self,
