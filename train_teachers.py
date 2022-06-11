@@ -15,19 +15,19 @@ from fed_distill.cifar10 import CIFAR10_TRAIN_TRANSFORM, CIFAR10_TEST_TRANSFORM
 logger = logging.getLogger("fed_distill")
 
 
-@hydra.main(config_path="config")
+@hydra.main(config_path="config", config_name="config")
 def main(cfg: DictConfig) -> None:
     t_cfg = cfg.teacher
-    if "seed" in t_cfg:
-        logger.info("Setting seed to %i", t_cfg.seed)
-        torch.random.manual_seed(t_cfg.seed)
+    if "seed" in cfg:
+        logger.info("Setting seed to %i", cfg.seed)
+        torch.random.manual_seed(cfg.seed)
 
     train_dataset = instantiate(cfg.dataset.train, transform=CIFAR10_TRAIN_TRANSFORM)
     test_dataset = instantiate(cfg.dataset.test, transform=CIFAR10_TEST_TRANSFORM)
 
     split = None
-    if "split_file" in t_cfg:
-        with open(t_cfg.split_file) as buffer:
+    if "split" in cfg:
+        with open(cfg.split.save_file) as buffer:
             split = json.load(buffer)
 
     for t in range(t_cfg.num_teachers):

@@ -14,9 +14,9 @@ logger = logging.getLogger("fed_distill")
 
 @hydra.main(config_path="config")
 def main(cfg: DictConfig) -> None:
-    if "seed" in cfg.split:
-        logger.info("Setting seed to %i", cfg.split.seed)
-        np.random.seed(cfg.split.seed)
+    if "seed" in cfg:
+        logger.info("Setting seed to %i", cfg.seed)
+        np.random.seed(cfg.seed)
 
     train_dataset = instantiate(cfg.dataset.train)
     test_dataset = instantiate(cfg.dataset.test)
