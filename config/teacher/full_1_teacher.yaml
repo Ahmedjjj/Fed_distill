@@ -1,0 +1,8 @@
+defaults:
+  - defaults
+
+num_teachers: 1
+
+train_epochs: 300
+
+save_folder: "/mlodata1/jellouli/experiments/teachers/full_1_teacher"

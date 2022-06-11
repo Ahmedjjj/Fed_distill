@@ -1,4 +1,3 @@
 num_nodes: 2
 unif_percentage: 0.1
 save_file: "/mlodata1/jellouli/experiments/data_split/heter_2_teachers.json"
-seed: 42
