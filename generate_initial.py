@@ -94,6 +94,7 @@ def main(cfg: DictConfig) -> None:
         save_file.parent.mkdir(parents=True)
 
     for i in range(cfg.initial.num_batches):
+        logger.info("Generating batch %i", i)
         dataset.grow()
 
     dataset.save(save_file)

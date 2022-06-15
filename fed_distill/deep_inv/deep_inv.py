@@ -5,6 +5,7 @@ from typing import Iterator, Optional, Tuple
 
 import torch
 import torch.nn as nn
+import torch.cuda.amp as amp
 import tqdm
 
 from fed_distill.data.label_sampler import TargetSampler
@@ -116,29 +117,38 @@ class AdaptiveDeepInversion:
         self.teacher.eval()
         if self.student:
             self.student.eval()
+        
+        if self.use_amp:
+            scaler = amp.GradScaler()
 
         for _ in tqdm.tqdm(range(self.grad_updates_batch)):
             inputs = self.inputs
             if self.input_jitter:
                 inputs = self._input_jitter(inputs, 2, 2)
+            
+            with amp.autocast(enabled=self.use_amp):
+                self.optimizer.zero_grad()
+                teacher_output = self.teacher(inputs)
+                student_output = None
+                if self.student:
+                    student_output = self.student(inputs)
+                teacher_bns = [mod.r_feature for mod in self.bn_losses]
 
-            self.optimizer.zero_grad()
-            teacher_output = self.teacher(inputs)
-            student_output = None
-            if self.student:
-                student_output = self.student(inputs)
-            teacher_bns = [mod.r_feature for mod in self.bn_losses]
+                loss = self.loss(
+                    inputs, targets, teacher_output, teacher_bns, student_output
+                )
 
-            loss = self.loss(
-                inputs, targets, teacher_output, teacher_bns, student_output
-            )
-
-            if best_cost > loss.item():
-                best_cost = loss.item()
-                best_inputs = inputs.data
-
-            loss.backward()
-            self.optimizer.step()
+                if best_cost > loss.item():
+                    best_cost = loss.item()
+                    best_inputs = inputs.data
+            
+            if self.use_amp:
+                scaler.scale(loss).backward()
+                scaler.step(self.optimizer)
+                scaler.update()
+            else:
+                loss.backward()
+                self.optimizer.step()
 
         self._cleanup_hooks()
 
