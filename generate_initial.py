@@ -12,23 +12,11 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 
-from fed_distill.data import RandomSampler, extract_subset
-from fed_distill.data.growing_dataset import GrowingDataset
+from fed_distill.data import RandomSampler, extract_subset, GrowingDataset, mix_iterators
 from fed_distill.cifar10 import CIFAR10_TEST_TRANSFORM
 from fed_distill.train import AccuracyTester
 
 logger = logging.getLogger("fed_distill")
-
-
-def mix_iterators(
-    iterators: Sequence[Iterator[Tuple[torch.Tensor, torch.Tensor]]]
-) -> Iterator[Tuple[torch.Tensor, torch.Tensor]]:
-    i = 0
-    while True:
-        logger.info("Generating batch from teacher %i", i)
-        yield next(iterators[i])
-        i = (i + 1) % len(iterators)
-
 
 @hydra.main(config_path="config", config_name="config")
 def main(cfg: DictConfig) -> None:
