@@ -6,7 +6,6 @@ from pathlib import Path
 import hydra
 import numpy as np
 import torch
-from apex import amp
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 from torch.utils.data import DataLoader
@@ -80,9 +79,6 @@ def main(cfg: DictConfig) -> None:
             device="cuda",
         )
         optimizer = instantiate(cfg.deep_inv.optimizer)([inputs])
-
-        if cfg.amp:
-            teacher, optimizer = amp.initialize(teacher, optimizer, opt_level="O1")
 
         di = instantiate(cfg.deep_inv.di)(
             optimizer=optimizer, teacher=teacher, use_amp=cfg.amp

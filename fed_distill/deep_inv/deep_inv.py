@@ -6,7 +6,6 @@ from typing import Iterator, Optional, Tuple
 import torch
 import torch.nn as nn
 import tqdm
-from apex import amp
 
 from fed_distill.data.label_sampler import TargetSampler
 from fed_distill.deep_inv.loss import ADILoss, DILoss
@@ -138,11 +137,7 @@ class AdaptiveDeepInversion:
                 best_cost = loss.item()
                 best_inputs = inputs.data
 
-            if self.use_amp:
-                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                loss.backward()
+            loss.backward()
             self.optimizer.step()
 
         self._cleanup_hooks()
