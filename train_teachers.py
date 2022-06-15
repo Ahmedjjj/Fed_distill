@@ -65,8 +65,8 @@ def main(cfg: DictConfig) -> None:
 
         save_folder = Path(t_cfg.save_folder)
         save_folder.mkdir(parents=True, exist_ok=True)
-        metrics_save_path = save_folder / f"metrics_teacher{t}"
-        model_save_path = save_folder / f"model_teacher{t}"
+        metrics_save_path = save_folder / f"metrics_teacher{t}.pt"
+        model_save_path = save_folder / f"model_teacher{t}.pt"
         metrics = trainer.metrics
         torch.save(metrics["best_model"], model_save_path)
         metrics.pop("best_model")
