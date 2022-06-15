@@ -3,15 +3,16 @@ import logging
 from pathlib import Path
 
 import hydra
+import numpy as np
 import torch
 from hydra.utils import instantiate
 from omegaconf import DictConfig
 from torch.utils.data import DataLoader
-import numpy as np
 
+from fed_distill.cifar10 import CIFAR10_TEST_TRANSFORM, CIFAR10_TRAIN_TRANSFORM
 from fed_distill.data import extract_subset
 from fed_distill.train import AccuracyTester, Trainer
-from fed_distill.cifar10 import CIFAR10_TRAIN_TRANSFORM, CIFAR10_TEST_TRANSFORM
+
 logger = logging.getLogger("fed_distill")
 
 
@@ -46,8 +47,16 @@ def main(cfg: DictConfig) -> None:
             if split
             else test_dataset
         )
-        logger.info("Teacher %i train dataset classes: %s", t, str(np.unique(teacher_train_dataset.targets)))
-        logger.info("Teacher %i test dataset classes: %s", t, str(np.unique(teacher_test_dataset.targets)))
+        logger.info(
+            "Teacher %i train dataset classes: %s",
+            t,
+            str(np.unique(teacher_train_dataset.targets)),
+        )
+        logger.info(
+            "Teacher %i test dataset classes: %s",
+            t,
+            str(np.unique(teacher_test_dataset.targets)),
+        )
 
         tester = AccuracyTester(DataLoader(teacher_test_dataset, t_cfg.batch_size_test))
         loader = DataLoader(teacher_train_dataset, t_cfg.batch_size_train, shuffle=True)
