@@ -1,0 +1,7 @@
+# @package _global_
+defaults:
+  - 1_teacher_custom
+  - _self_
+
+student:
+  adaptive: True

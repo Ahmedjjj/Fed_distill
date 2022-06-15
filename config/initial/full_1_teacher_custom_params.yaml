@@ -1,2 +1,0 @@
-num_batches: 50
-save_path: "/mlodata1/jellouli/experiments/initial_batches/full_1_teacher_custom_params.pt"

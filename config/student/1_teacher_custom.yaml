@@ -1,0 +1,16 @@
+# @package _global_
+defaults:
+  - defaults
+  - /deep_inv: custom_params
+  - /teacher: full_1_teacher
+  - _self_
+
+initial:
+  num_batches: 50
+  save_path: "/mlodata1/jellouli/experiments/initial_batches/full_1_teacher_custom_params.pt"
+
+student:
+  adaptive: False
+  save_folder: "/mlodata1/jellouli/experiments/student/full_1_teacher_custom"
+
+amp: False

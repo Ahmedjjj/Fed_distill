@@ -3,4 +3,3 @@ defaults:
   - dataset: cifar10
 
 seed: 42
-amp: True
