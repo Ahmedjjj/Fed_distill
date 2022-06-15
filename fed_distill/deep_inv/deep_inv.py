@@ -6,6 +6,7 @@ from typing import Iterator, Optional, Tuple
 import torch
 import torch.nn as nn
 import tqdm
+from apex import amp
 
 from fed_distill.data.label_sampler import TargetSampler
 from fed_distill.deep_inv.loss import ADILoss, DILoss
@@ -58,6 +59,7 @@ class AdaptiveDeepInversion:
     student: Optional[nn.Module] = None
     grad_updates_batch: int = 1000
     input_jitter: bool = True
+    use_amp: bool = True
 
     def __post_init__(self) -> None:
         self.inputs = self.optimizer.param_groups[0]["params"][
@@ -92,7 +94,10 @@ class AdaptiveDeepInversion:
 
         # Initialize input randomly
         self.inputs.data = torch.randn(
-            self.inputs.shape, requires_grad=True, device=self.inputs.device,
+            self.inputs.shape,
+            requires_grad=True,
+            device=self.inputs.device,
+            dtype=self.inputs.dtype,
         )
         targets = targets.to(self.inputs.device)
 
@@ -133,7 +138,11 @@ class AdaptiveDeepInversion:
                 best_cost = loss.item()
                 best_inputs = inputs.data
 
-            loss.backward()
+            if self.use_amp:
+                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward()
             self.optimizer.step()
 
         self._cleanup_hooks()
@@ -148,7 +157,7 @@ class AdaptiveDeepInversion:
 
         if restore_teacher:
             self.teacher.train()
-        if restore_student:
+        if self.student and restore_student:
             self.student.train()
 
         return best_inputs, targets
@@ -172,6 +181,7 @@ class DeepInversion(AdaptiveDeepInversion):
         teacher: nn.Module,
         grad_updates_batch: int = 1000,
         input_jitter: bool = True,
+        use_amp: bool = True,
     ):
         super().__init__(
             loss=loss,
@@ -180,5 +190,6 @@ class DeepInversion(AdaptiveDeepInversion):
             student=None,
             grad_updates_batch=grad_updates_batch,
             input_jitter=input_jitter,
+            use_amp=use_amp,
         )
 
