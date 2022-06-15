@@ -6,13 +6,14 @@ di:
     l2_scale: 3e-8
     var_scale: 2.5e-5
     bn_scale: 10
-  optimizer: 
-    _partial_: True
-    _target_: torch.optim.Adam
-    lr: 0.1
   grad_updates_batch: 2000
   input_jitter: True
-  
+
+optimizer: 
+  _partial_: True
+  _target_: torch.optim.Adam
+  lr: 0.05
+
 
 adi:
   _partial_: True
@@ -23,11 +24,8 @@ adi:
     var_scale: 2.5e-5
     bn_scale: 10
     comp_scale: 10
-  optimizer: 
-    _partial_: True
-    _target_: torch.optim.Adam
-    lr: 0.1
   grad_updates_batch: 2000
   input_jitter: True
   
-  batch_size: True
+
+batch_size: 256

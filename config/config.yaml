@@ -1,1 +1,6 @@
+defaults:
+  - _self_
+  - dataset: cifar10
+
 seed: 42
+amp: True

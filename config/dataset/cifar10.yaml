@@ -10,4 +10,4 @@ test:
   train: False
   download: True
 
-input_size: (3, 32, 32)
+input_size: [3, 32, 32]
