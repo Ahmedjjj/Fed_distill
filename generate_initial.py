@@ -2,7 +2,7 @@ import json
 import logging
 import random
 from pathlib import Path
-from typing import Iterator, Sequence
+from typing import Iterator, Sequence, Tuple
 
 import hydra
 import numpy as np
@@ -10,18 +10,25 @@ import torch
 from apex import amp
 from hydra.utils import instantiate
 from omegaconf import DictConfig
+from torch.utils.data import DataLoader
 
 from fed_distill.data import RandomSampler, extract_subset
 from fed_distill.data.growing_dataset import GrowingDataset
+from fed_distill.cifar10 import CIFAR10_TEST_TRANSFORM
+from fed_distill.train import AccuracyTester
 
 logger = logging.getLogger("fed_distill")
 
-def mix_iterators(iterators: Sequence[Iterator[torch.Tensor, torch.Tensor]]) -> Iterator[torch.Tensor, torch.Tensor]:
+
+def mix_iterators(
+    iterators: Sequence[Iterator[Tuple[torch.Tensor, torch.Tensor]]]
+) -> Iterator[Tuple[torch.Tensor, torch.Tensor]]:
     i = 0
     while True:
         logger.info("Generating batch from teacher %i", i)
         yield next(iterators[i])
         i = (i + 1) % len(iterators)
+
 
 @hydra.main(config_path="config", config_name="config")
 def main(cfg: DictConfig) -> None:
@@ -31,8 +38,9 @@ def main(cfg: DictConfig) -> None:
         torch.random.manual_seed(cfg.seed)
         random.seed(cfg.seed)
         np.random.seed(cfg.seed)
-    
+
     train_dataset = instantiate(cfg.dataset.train)
+    test_dataset = instantiate(cfg.dataset.test, transform=CIFAR10_TEST_TRANSFORM)
 
     split = None
     if "split" in cfg:
@@ -46,24 +54,48 @@ def main(cfg: DictConfig) -> None:
         weights = torch.load(teacher_save_folder / f"model_teacher{i}.pt")
         teacher = instantiate(t_cfg.model).to("cuda")
         teacher.load_state_dict(weights)
-        
+
         teacher_dataset = (
             extract_subset(train_dataset, split[f"teacher{i}"]["train"])
             if split
             else train_dataset
         )
+        teacher_test_dataset = (
+            extract_subset(test_dataset, split[f"teacher{i}"]["test"])
+            if split
+            else test_dataset
+        )
         dataset_targets = tuple(np.unique(teacher_dataset.targets).tolist())
-        sampler = RandomSampler(batch_size=cfg.di.batch_size, classes=dataset_targets)    
-        inputs = torch.randn((cfg.di.batch_size, *cfg.dataset.input_size), requires_grad=True, device="cuda")
-        optimizer = instantiate(cfg.deep_inversion.optimizer)([inputs])
+        logger.info("Teacher %i train dataset classes: %s", i, str(dataset_targets))
+        logger.info(
+            "Teacher %i test dataset classes: %s",
+            i,
+            str(tuple(np.unique(teacher_test_dataset.targets))),
+        )
+        logger.info(
+            "Teacher %i test accuracy %f", i, 
+            AccuracyTester(DataLoader(teacher_test_dataset, batch_size=4098))(teacher),
+        )
+
+        sampler = RandomSampler(
+            batch_size=cfg.deep_inv.batch_size, classes=dataset_targets
+        )
+        inputs = torch.randn(
+            (cfg.deep_inv.batch_size, *cfg.dataset.input_size),
+            requires_grad=True,
+            device="cuda",
+        )
+        optimizer = instantiate(cfg.deep_inv.optimizer)([inputs])
 
         if cfg.amp:
             teacher, optimizer = amp.initialize(teacher, optimizer, opt_level="O1")
-    
-        di = instantiate(cfg.deep_inversion.di)(optimizer=optimizer, teacher=teacher, use_amp=cfg.amp)
-        
+
+        di = instantiate(cfg.deep_inv.di)(
+            optimizer=optimizer, teacher=teacher, use_amp=cfg.amp
+        )
+
         deep_invs.append(di.iterator_from_sampler(sampler))
-    
+
     dataset = GrowingDataset(stream=mix_iterators(deep_invs))
 
     save_file = Path(cfg.initial.save_path)
@@ -73,7 +105,9 @@ def main(cfg: DictConfig) -> None:
 
     for i in range(cfg.initial.num_batches):
         dataset.grow()
-    
+
     dataset.save(save_file)
-    
-    
+
+
+if __name__ == "__main__":
+    main()
