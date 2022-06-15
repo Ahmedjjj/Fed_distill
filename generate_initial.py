@@ -1,17 +1,19 @@
 import json
 import logging
+import random
 from pathlib import Path
 from typing import Iterator, Sequence
 
 import hydra
+import numpy as np
 import torch
+from apex import amp
 from hydra.utils import instantiate
 from omegaconf import DictConfig
-import numpy as np
 
-from fed_distill.data import extract_subset
-from fed_distill.data import RandomSampler
+from fed_distill.data import RandomSampler, extract_subset
 from fed_distill.data.growing_dataset import GrowingDataset
+
 logger = logging.getLogger("fed_distill")
 
 def mix_iterators(iterators: Sequence[Iterator[torch.Tensor, torch.Tensor]]) -> Iterator[torch.Tensor, torch.Tensor]:
@@ -27,6 +29,8 @@ def main(cfg: DictConfig) -> None:
     if "seed" in cfg:
         logger.info("Setting seed to %i", cfg.seed)
         torch.random.manual_seed(cfg.seed)
+        random.seed(cfg.seed)
+        np.random.seed(cfg.seed)
     
     train_dataset = instantiate(cfg.dataset.train)
 
@@ -49,11 +53,14 @@ def main(cfg: DictConfig) -> None:
             else train_dataset
         )
         dataset_targets = tuple(np.unique(teacher_dataset.targets).tolist())
-        sampler = RandomSampler(batch_size=cfg.di.batch_size, classes=dataset_targets)
-        
+        sampler = RandomSampler(batch_size=cfg.di.batch_size, classes=dataset_targets)    
         inputs = torch.randn((cfg.di.batch_size, *cfg.dataset.input_size), requires_grad=True, device="cuda")
         optimizer = instantiate(cfg.deep_inversion.optimizer)([inputs])
-        di = instantiate(cfg.deep_inversion.di)(optimizer=optimizer, teacher=teacher)
+
+        if cfg.amp:
+            teacher, optimizer = amp.initialize(teacher, optimizer, opt_level="O1")
+    
+        di = instantiate(cfg.deep_inversion.di)(optimizer=optimizer, teacher=teacher, use_amp=cfg.amp)
         
         deep_invs.append(di.iterator_from_sampler(sampler))
     
