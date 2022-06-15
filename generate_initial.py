@@ -2,7 +2,6 @@ import json
 import logging
 import random
 from pathlib import Path
-from typing import Iterator, Sequence, Tuple
 
 import hydra
 import numpy as np
@@ -12,11 +11,17 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig
 from torch.utils.data import DataLoader
 
-from fed_distill.data import RandomSampler, extract_subset, GrowingDataset, mix_iterators
+from fed_distill.data import (
+    RandomSampler,
+    extract_subset,
+    GrowingDataset,
+    mix_iterators,
+)
 from fed_distill.cifar10 import CIFAR10_TEST_TRANSFORM
 from fed_distill.train import AccuracyTester
 
 logger = logging.getLogger("fed_distill")
+
 
 @hydra.main(config_path="config", config_name="config")
 def main(cfg: DictConfig) -> None:
@@ -61,7 +66,8 @@ def main(cfg: DictConfig) -> None:
             str(tuple(np.unique(teacher_test_dataset.targets))),
         )
         logger.info(
-            "Teacher %i test accuracy %f", i, 
+            "Teacher %i test accuracy %f",
+            i,
             AccuracyTester(DataLoader(teacher_test_dataset, batch_size=4098))(teacher),
         )
 
