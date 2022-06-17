@@ -4,4 +4,5 @@ defaults:
   - _self_
 
 student:
+  save_folder: "/mlodata1/jellouli/experiments/student/full_1_teacher_custom/adaptive"
   adaptive: True

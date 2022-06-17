@@ -1,0 +1,8 @@
+# @package _global_
+defaults:
+  - 1_teacher_paper
+  - _self_
+
+student:
+  save_folder: "/mlodata1/jellouli/experiments/student/full_1_teacher_paper/adaptive"
+  adaptive: True
