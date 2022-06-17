@@ -67,7 +67,7 @@ class AdaptiveDeepInversion:
         ]  # extract initial matrix
         self._metrics = {"instant_acc_teacher": []}
         if self.student:
-            self._metrics["instant_acc_student":[]]
+            self._metrics["instant_acc_student"] = []
 
     def _prepare_teacher(self, teacher_net: nn.Module) -> None:
         self.bn_losses = []
