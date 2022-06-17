@@ -2,6 +2,7 @@ import logging
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Callable, Dict, Optional, Union
+from copy import deepcopy
 
 import torch
 from torch import nn
@@ -68,7 +69,8 @@ class Trainer:
             if model_acc > self.best_acc:
                 logger.info("Accuracy improved")
                 self.best_acc = model_acc
-                self._metrics["best_model"] = self.model.state_dict()
+                self._metrics["best_model"] = deepcopy(self.model.state_dict())
+            logger.info("Best acc: %f", self.best_acc)
 
         self.scheduler.step()
 
