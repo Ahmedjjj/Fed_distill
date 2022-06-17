@@ -32,7 +32,7 @@ def main(cfg: DictConfig) -> None:
     t_cfg = cfg.teacher
     s_cfg = cfg.student
     if "seed" in s_cfg:
-        logger.info("Setting seed to %i", cfg.seed)
+        logger.info("Setting seed to %i", s_cfg.seed)
         torch.random.manual_seed(cfg.student.seed)
         random.seed(cfg.student.seed)
         np.random.seed(cfg.student.seed)
@@ -50,6 +50,7 @@ def main(cfg: DictConfig) -> None:
     
     student = instantiate(s_cfg.model).to("cuda")
 
+    deep_invs_o = []
     deep_invs = []
     teacher_save_folder = Path(t_cfg.save_folder)
 
@@ -99,7 +100,7 @@ def main(cfg: DictConfig) -> None:
             di = instantiate(cfg.deep_inv.di)(
                 optimizer=optimizer, teacher=teacher, use_amp=cfg.amp
             )
-
+        deep_invs_o.append(di)
         deep_invs.append(di.iterator_from_sampler(sampler))
 
     initial_dataset = None
@@ -150,7 +151,7 @@ def main(cfg: DictConfig) -> None:
     torch.save(model, save_folder / "student.pt")
     torch.save(train_metrics, save_folder / "metrics.pt")
 
-    for i, di in enumerate(deep_invs):
+    for i, di in enumerate(deep_invs_o):
         torch.save(di.metrics, save_folder / f"di_metrics_teacher{i}.pt")
     
     student_dataset.save(save_folder / "dataset.pt")
