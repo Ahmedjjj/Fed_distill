@@ -71,7 +71,7 @@ class ADILoss(nn.Module):
     ) -> torch.Tensor:
         if self.classes:
             teacher_output = teacher_output[:, self.classes]
-            if student_output:
+            if student_output is not None:
                 student_output = student_output[:, self.classes]
             for k, v in self.class_map.items():
                 targets[targets == k] = v
