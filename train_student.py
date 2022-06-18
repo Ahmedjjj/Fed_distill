@@ -107,9 +107,12 @@ def main(cfg: DictConfig) -> None:
     if "split" in cfg and len(split.keys()) > t_cfg.num_teachers:
         logger.info("Loading subset of training data to student")
         initial_datasets = []
-        for i in range(t_cfg.num_teacher):
+        for i in range(t_cfg.num_teachers, len(split.keys())):
+            logger.info(f"Loading subset corresponding to teacher %i", i)
+            subset = extract_subset(train_dataset, split[f"teacher{i}"]["train"])
+            logger.info("Student targets %s", str(np.unique(subset.targets)))
             initial_datasets.append(
-                extract_subset(train_dataset, split[f"teacher{i}"]["train"])
+                subset
             )
         initial_dataset = ConcatDataset(initial_datasets)
 

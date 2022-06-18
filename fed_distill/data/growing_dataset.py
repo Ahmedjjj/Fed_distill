@@ -29,7 +29,10 @@ class GrowingDataset(Dataset[Tuple[torch.Tensor, torch.Tensor]]):
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         if index < len(self.base):
-            return self.base[index]
+            image, label = self.base[index]
+            if isinstance(label, int):
+                label = torch.LongTensor([label])
+            return image, label
         else:
             shifted_index = index - len(self.base)
             image, label = self._images[shifted_index], self._labels[shifted_index]
