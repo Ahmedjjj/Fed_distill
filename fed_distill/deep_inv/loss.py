@@ -59,6 +59,7 @@ class ADILoss(nn.Module):
         self.classes = None
         if classes:
             self.classes = tuple(classes)
+            self.class_map = dict(zip(self.classes, range(len(self.classes))))
 
     def forward(
         self,
@@ -68,6 +69,13 @@ class ADILoss(nn.Module):
         teacher_bns: List[torch.Tensor] = None,
         student_output: torch.Tensor = None,
     ) -> torch.Tensor:
+        if self.classes:
+            teacher_output = teacher_output[:, self.classes]
+            if student_output:
+                student_output = student_output[:, self.classes]
+            for k, v in self.class_map.items():
+                targets[targets == k] = v
+
         loss = self.criterion(teacher_output, targets)
         if self.l2_scale > 0.0:
             loss += self.l2_scale * torch.norm(inputs, 2)
@@ -81,10 +89,7 @@ class ADILoss(nn.Module):
 
         if self.comp_scale > 0.0:
             assert student_output is not None
-            if not self.classes:
-                loss += self.comp_scale * (1 - self.js_div(teacher_output, student_output))
-            else:
-                loss += self.comp_scale * (1 - self.js_div(teacher_output[:, self.classes], student_output[:, self.classes]))
+            loss += self.comp_scale * (1 - self.js_div(teacher_output, student_output))
 
         return loss
 
