@@ -12,7 +12,7 @@ from fed_distill.data import index_split_heter
 logger = logging.getLogger("fed_distill")
 
 
-@hydra.main(config_path="config")
+@hydra.main(config_path="config", config_name="config")
 def main(cfg: DictConfig) -> None:
     if "seed" in cfg:
         logger.info("Setting seed to %i", cfg.seed)
