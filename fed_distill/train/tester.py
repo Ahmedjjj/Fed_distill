@@ -1,4 +1,5 @@
-from typing import Callable, Union
+from collections import defaultdict
+from typing import Callable, Dict, Union
 
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -35,3 +36,22 @@ def get_batch_accuracy(model: nn.Module, images: torch.Tensor, labels: torch.Ten
         if restore:
             model.train()
         return acc
+
+def get_class_accuracy(model: nn.Module, test_loader: DataLoader, device: Union[torch.device, str]="cuda") -> Dict[int, float]:
+    restore = model.training
+    num_correct = defaultdict(lambda : 0)
+    num_samples = defaultdict(lambda : 0)
+    model.eval()
+    with torch.no_grad():
+        for images, labels in test_loader:
+            labels_unique = torch.unique(labels).tolist()
+            for l in labels_unique:
+                images_l = images[labels == l].to(device)
+                labels_l = labels[labels == l].to(device)
+                num_correct[l] += torch.sum(model(images_l).argmax(dim=1) == labels_l).item()
+                num_samples[l] += len(labels_l)
+
+    if restore:
+        model.train()
+    
+    return {l: num_correct[l] / num_samples[l] for l in num_correct.keys()}
