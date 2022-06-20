@@ -10,7 +10,7 @@ import tqdm
 from fed_distill.data.label_sampler import TargetSampler
 from fed_distill.deep_inv.deep_inv import (AdaptiveDeepInversion,
                                            DeepInversionFeatureHook)
-from fed_distill.deep_inv.multi_teacher_loss import MultiTeacherADILoss
+from fed_distill.deep_inv.multi_teacher_loss import ADILoss
 from fed_distill.train.tester import get_batch_accuracy
 from torch import nn
 
