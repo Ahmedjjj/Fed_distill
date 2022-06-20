@@ -4,6 +4,7 @@ from typing import Iterable, Iterator, Optional, Tuple
 
 import torch
 import torch.cuda.amp as amp
+from torch.cuda import Stream
 import tqdm
 
 from fed_distill.data.label_sampler import TargetSampler
@@ -17,7 +18,7 @@ from torch import nn
 class MultiTeacherDeepInversion:
     def __init__(
         self,
-        loss: MultiTeacherADILoss,
+        loss: ADILoss,
         optimizer: torch.optim.Optimizer,
         teachers: Iterable[nn.Module],
         student: Optional[nn.Module] = None,
@@ -97,6 +98,9 @@ class MultiTeacherDeepInversion:
 
         if self.use_amp:
             scaler = amp.GradScaler()
+        
+        streams = []
+        losses = []
 
         for _ in tqdm.tqdm(range(self.grad_updates_batch)):
             inputs = self.inputs
@@ -105,26 +109,37 @@ class MultiTeacherDeepInversion:
 
             with amp.autocast(enabled=self.use_amp):
                 self.optimizer.zero_grad()
-                teacher_outputs = [teacher(inputs) for teacher in self.teachers]
-                student_output = None
-                if self.student:
-                    student_output = self.student(inputs)
-                teacher_bns = [mod.r_feature for mod in self.bn_losses]
+                for teacher in self.teachers:
+                    s = Stream(inputs.device)
+                    with torch.cuda.stream(s):
+                        s.wait_stream(torch.cuda.current_stream())
+                        teacher_output = teacher(inputs)
+                        student_output = None
+                        if self.student and self.loss.comp_scale > 0:
+                            student_output = self.student(inputs)
+                        teacher_bns = [mod.r_feature for mod in self.bn_losses]
 
-                loss = self.loss(
-                    inputs, targets, teacher_outputs, teacher_bns, student_output
-                )
+                        loss = self.loss(
+                            inputs, targets, teacher_output, teacher_bns, student_output
+                        )
+                        losses.append(loss)
+                        streams.append(s)
+                
+                for s in streams:
+                    torch.cuda.current_stream().wait_stream(s)
+                
+                loss = torch.mean(losses)
 
                 if best_cost > loss.item():
                     best_cost = loss.item()
                     best_inputs = inputs.data
 
             if self.use_amp:
-                scaler.scale(loss).backward()
+                scaler.scale(loss).backward(retain_graph=True)
                 scaler.step(self.optimizer)
                 scaler.update()
             else:
-                loss.backward()
+                loss.backward(retain_graph=True)
                 self.optimizer.step()
 
         self._cleanup_hooks()
