@@ -80,7 +80,7 @@ def main(cfg: DictConfig) -> None:
         )
         optimizer = instantiate(cfg.deep_inv.optimizer)([inputs])
 
-        di = instantiate(cfg.deep_inv.di)(
+        di = instantiate(cfg.deep_inv.di, loss={"classes": dataset_targets})(
             optimizer=optimizer, teacher=teacher, use_amp=cfg.amp
         )
 
