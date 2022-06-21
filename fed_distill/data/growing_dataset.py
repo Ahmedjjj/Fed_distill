@@ -31,7 +31,7 @@ class GrowingDataset(Dataset[Tuple[torch.Tensor, torch.Tensor]]):
         if index < len(self.base):
             image, label = self.base[index]
             if isinstance(label, int):
-                label = torch.LongTensor([label])
+                label = torch.tensor(label)
             return image, label
         else:
             shifted_index = index - len(self.base)
