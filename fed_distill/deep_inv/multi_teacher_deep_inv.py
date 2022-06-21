@@ -91,7 +91,7 @@ class MultiTeacherDeepInversion:
             restore_student = self.student.training
 
         for teacher in self.teachers:
-            teacher.eval()
+            self.teacher.eval()
         if self.student:
             self.student.eval()
 
@@ -130,7 +130,7 @@ class MultiTeacherDeepInversion:
         self._cleanup_hooks()
 
         for i, teacher in enumerate(self.teachers):
-            self._metrics["instant_acc_teachers"][i].append(
+            self._metrics["instant_acc_teachers"][i](
                 get_batch_accuracy(teacher, self.inputs, targets)
             )
         if self.student:
