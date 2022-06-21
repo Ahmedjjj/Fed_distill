@@ -2,7 +2,7 @@ di:
   _partial_: True
   _target_: fed_distill.deep_inv.MultiTeacherDeepInversion
   loss:
-    _target_: fed_distill.deep_inv.ADILoss
+    _target_: fed_distill.deep_inv.MultiTeacherADILoss
     l2_scale: 0.0
     var_scale: 1e-3
     bn_scale: 10
