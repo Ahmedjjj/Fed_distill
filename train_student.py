@@ -97,7 +97,7 @@ def main(cfg: DictConfig) -> None:
                 optimizer=optimizer, teacher=teacher, student=student, use_amp=cfg.amp
             )
         else:
-            di = instantiate(cfg.deep_inv.di)(
+            di = instantiate(cfg.deep_inv.di, loss={"classes": dataset_targets})(
                 optimizer=optimizer, teacher=teacher, use_amp=cfg.amp
             )
         deep_invs_o.append(di)
