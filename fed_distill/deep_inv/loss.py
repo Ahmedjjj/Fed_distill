@@ -1,3 +1,5 @@
+import enum
+from turtle import forward
 from typing import Iterable, List, Optional
 
 import torch
@@ -46,7 +48,7 @@ class ADILoss(nn.Module):
         bn_scale: float = 10,
         comp_scale: float = 0.0,
         softmax_temp: float = 3,
-        classes: Optional[Iterable[int]] = None
+        classes: Optional[Iterable[int]] = None,
     ) -> None:
         super().__init__()
         self.l2_scale = l2_scale
@@ -58,7 +60,7 @@ class ADILoss(nn.Module):
         self.softmax_temp = softmax_temp
         self.classes = None
         if classes:
-            self.classes = tuple(classes)
+            self.classes = sorted(tuple(set(classes)))
 
     def forward(
         self,
@@ -68,6 +70,14 @@ class ADILoss(nn.Module):
         teacher_bns: List[torch.Tensor] = None,
         student_output: torch.Tensor = None,
     ) -> torch.Tensor:
+        if self.classes:
+            teacher_output = teacher_output[:, self.classes]
+            if student_output is not None:
+                student_output = student_output[:, self.classes]
+            targets = targets.clone()
+            for i, c in enumerate(self.classes):
+                targets[targets == c] = i
+            
         loss = self.criterion(teacher_output, targets)
         if self.l2_scale > 0.0:
             loss += self.l2_scale * torch.norm(inputs, 2)
@@ -81,12 +91,12 @@ class ADILoss(nn.Module):
 
         if self.comp_scale > 0.0:
             assert student_output is not None
-            if not self.classes:
-                loss += self.comp_scale * (1 - self.js_div(teacher_output, student_output))
-            else:
-                loss += self.comp_scale * (1 - self.js_div(teacher_output[:, self.classes], student_output[:, self.classes]))
-
+            loss += self.comp_scale * (
+                1 - self.js_div(teacher_output, student_output)
+            )
+        
         return loss
+
 
 class DILoss(ADILoss):
     def __init__(
@@ -95,10 +105,12 @@ class DILoss(ADILoss):
         var_scale: float = 5e-5,
         bn_scale: float = 10,
         softmax_temp: float = 3,
+        classes: Optional[Iterable[int]]=None
     ) -> None:
         super().__init__(
             l2_scale=l2_scale,
             var_scale=var_scale,
             bn_scale=bn_scale,
             softmax_temp=softmax_temp,
+            classes=classes
         )
