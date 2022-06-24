@@ -9,7 +9,7 @@ class ADIEntropyLoss(ADILoss):
     def __init__(
         self,
         classes: Iterable[int],
-        classes_other: Iterable[int],
+        other_classes: Iterable[int],
         l2_scale: float = 0,
         entropy_scale: float = 1,
         var_scale: float = 0.00005,
@@ -20,7 +20,7 @@ class ADIEntropyLoss(ADILoss):
         super().__init__(
             l2_scale, var_scale, bn_scale, comp_scale, softmax_temp, classes
         )
-        self.classes_other = tuple(sorted(set(classes_other)))
+        self.classes_other = tuple(sorted(set(other_classes)))
         self.entropy_scale = entropy_scale
 
     def forward(
