@@ -18,9 +18,9 @@ optimizer:
 
 adi:
   _partial_: True
-  _target_: fed_distill.deep_inv.AdaptiveDeepInversionWithEntropy
+  _target_: fed_distill.experimental.AdaptiveDeepInversionWithEntropy
   loss:
-    _target_: fed_distill.deep_inv.ADIEntropyLoss
+    _target_: fed_distill.experimental.ADIEntropyLoss
     l2_scale: 0.0
     var_scale: 1e-3
     bn_scale: 10
