@@ -1,0 +1,32 @@
+di:
+  _partial_: True
+  _target_: fed_distill.experimental.AdaptiveDeepInversionWithEntropy
+  loss:
+    _target_: fed_distill.experimental.ADIEntropyLoss
+    l2_scale: 0.0
+    var_scale: 1e-3
+    bn_scale: 10
+    comp_scale: 0.0 
+    entropy_scale: 1
+  grad_updates_batch: 1000
+  input_jitter: True
+  
+optimizer: 
+  _partial_: True
+  _target_: torch.optim.Adam
+  lr: 0.1
+
+adi:
+  _partial_: True
+  _target_: fed_distill.deep_inv.AdaptiveDeepInversionWithEntropy
+  loss:
+    _target_: fed_distill.deep_inv.ADIEntropyLoss
+    l2_scale: 0.0
+    var_scale: 1e-3
+    bn_scale: 10
+    comp_scale: 10
+    entropy_scale: 1
+  grad_updates_batch: 1000
+  input_jitter: True
+  
+batch_size: 256
