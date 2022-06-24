@@ -83,7 +83,7 @@ def main(cfg: DictConfig) -> None:
     optimizer = instantiate(cfg.deep_inv.optimizer)([inputs])
 
     di = instantiate(cfg.deep_inv.di)(
-        optimizer=optimizer, teacher=teachers, use_amp=cfg.amp
+        optimizer=optimizer, teachers=teachers, use_amp=cfg.amp
     )
 
     deep_invs.append(di.iterator_from_sampler(sampler))
