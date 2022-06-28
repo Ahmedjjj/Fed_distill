@@ -1,11 +1,24 @@
 # @package _global_
-default:
-  - half_1_teacher_custom
+defaults:
+  - defaults
+  - /deep_inv: custom_params_more_iterations
+  - /teacher: full_2_teachers
+  - /split: full_2_teachers
   - _self_
 
-student:
-  save_folder: /mlodata1/jellouli/experiments/student/half_1_teacher_custom_weighted/adaptive
+teacher:
+  num_teachers: 1
 
+initial:
+  num_batches: 25
+  save_path: "/mlodata1/jellouli/experiments/initial_batches/half_1_teacher_custom_params.pt"
+
+student:
+  adaptive: True
+  new_batches_per_epoch: 1
+  save_folder: /mlodata1/jellouli/experiments/student/half_1_teacher_custom_weighted/adaptive
   criterion:
     _target_: torch.nn.CrossEntropyLoss
     weight: [2,2,2,2,2, 1,1,1,1,1]
+
+amp: True
