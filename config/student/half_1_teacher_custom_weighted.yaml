@@ -20,7 +20,7 @@ student:
   criterion:
     _target_: torch.nn.CrossEntropyLoss
     weight: 
-    _target_: torch.Tensor
-    _args_: [2,2,2,2,2, 1,1,1,1,1]
+      _target_: torch.Tensor
+      _args_: [2,2,2,2,2, 1,1,1,1,1]
 
 amp: True
