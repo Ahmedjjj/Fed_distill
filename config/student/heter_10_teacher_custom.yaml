@@ -1,0 +1,17 @@
+# @package _global_
+defaults:
+  - defaults
+  - /deep_inv: custom_params
+  - /teacher: heter_10_teachers
+  - /split: heter_10_teachers
+  - _self_
+
+initial:
+  num_batches: 50
+  save_path: "/mlodata1/jellouli/experiments/initial_batches/heter_10_teachers_custom.pt"
+
+student:
+  adaptive: True
+  save_folder: "/mlodata1/jellouli/experiments/student/heter_10_teacher_custom"
+
+amp: True
