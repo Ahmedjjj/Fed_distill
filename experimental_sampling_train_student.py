@@ -2,6 +2,7 @@ import json
 import logging
 import random
 from pathlib import Path
+from collections import Counter
 
 import hydra
 import numpy as np
@@ -54,6 +55,7 @@ def main(cfg: DictConfig) -> None:
     deep_invs = []
     teacher_save_folder = Path(t_cfg.save_folder)
     teachers = []
+    teacher_loss_weights = []
 
     for i in range(t_cfg.num_teachers):
         weights = torch.load(teacher_save_folder / f"model_teacher{i}.pt")
@@ -83,6 +85,13 @@ def main(cfg: DictConfig) -> None:
             AccuracyTester(DataLoader(teacher_test_dataset, batch_size=s_cfg.batch_size_train))(teacher),
         )
         teachers.append(teacher)
+        counts = Counter(teacher_dataset.targets)
+        weights = []
+        for i in range(len(counts.keys())):
+            weights.append(counts[i] / len(teacher_dataset))
+
+        logger.info("Teacher %i weights: %s", i, str(weights))
+        teacher_loss_weights.append(torch.tensor(weights).to("cuda"))
 
     sampler = RandomSampler(
         batch_size=cfg.deep_inv.batch_size, classes=10
@@ -94,9 +103,14 @@ def main(cfg: DictConfig) -> None:
     )
     optimizer = instantiate(cfg.deep_inv.optimizer)([inputs])
 
+    losses = []
+    for i in range(len(teachers)):
+        losses.append(instantiate(cfg.deep_inv.di.loss, weights=teacher_loss_weights[i]))
+
     di = instantiate(cfg.deep_inv.adi)(
-            optimizer=optimizer, teachers=teachers, student=student, use_amp=cfg.amp
-        )
+        optimizer=optimizer, teachers=teachers, use_amp=cfg.amp, loss=losses, student=student
+    )
+
     deep_invs_o.append(di)
     deep_invs.append(di.iterator_from_sampler(sampler))
 
