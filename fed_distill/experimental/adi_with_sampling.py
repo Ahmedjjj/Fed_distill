@@ -1,7 +1,7 @@
 import random
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Iterable, Iterator, List, Optional, Tuple
+from typing import Iterable, Iterator, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import torch
@@ -16,7 +16,7 @@ from fed_distill.train.tester import get_batch_accuracy
 
 @dataclass
 class AdaptiveDeepInversionWithSampling:
-    loss: ADILoss
+    loss: Union[ADILoss, Iterable[ADILoss]]
     optimizer: torch.optim.Optimizer
     teachers: Iterable[nn.Module]
     student: Optional[nn.Module] = None
@@ -34,6 +34,10 @@ class AdaptiveDeepInversionWithSampling:
         if self.student:
             self._metrics["instant_acc_student"] = []
         self.bn_losses = []
+        if isinstance(self.loss, ADILoss):
+            self.loss = [self.loss] * len(self.teachers)
+        else:
+            self.loss = tuple(self.loss)
 
     def _prepare_teacher(self, teacher_net: nn.Module) -> None:
         losses = []
@@ -106,7 +110,7 @@ class AdaptiveDeepInversionWithSampling:
                     teacher = self.teachers[i]
                     teacher_output = teacher(inputs)
                     teacher_bns = [mod.r_feature for mod in self.bn_losses[i]]
-                    loss += self.loss(
+                    loss += self.loss[i](
                         inputs, targets, teacher_output, teacher_bns, student_output
                     )
                 loss /= self.num_teachers
