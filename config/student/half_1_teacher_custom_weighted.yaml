@@ -1,7 +1,7 @@
 # @package _global_
 defaults:
   - defaults
-  - /deep_inv: custom_params_more_iterations
+  - /deep_inv: custom_params
   - /teacher: full_2_teachers
   - /split: full_2_teachers
   - _self_
