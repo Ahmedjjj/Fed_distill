@@ -80,7 +80,7 @@ def main(cfg: DictConfig) -> None:
             weights.append(counts[i] / len(teacher_dataset))
 
         logger.info("Teacher %i weights: %s", i, str(weights))
-        teacher_loss_weights.append(torch.tensor(weights))
+        teacher_loss_weights.append(torch.tensor(weights).to("cuda"))
 
     sampler = RandomSampler(
         batch_size=cfg.deep_inv.batch_size, classes=range(10)
