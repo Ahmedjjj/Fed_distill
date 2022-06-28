@@ -1,7 +1,7 @@
 # @package _global_
 defaults:
   - defaults
-  - /deep_inv: custom_params
+  - /deep_inv: sampling_experimental
   - /teacher: heter_10_teachers
   - /split: heter_10_teachers
   - _self_
