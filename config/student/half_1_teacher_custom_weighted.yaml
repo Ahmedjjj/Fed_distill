@@ -21,8 +21,6 @@ student:
     _target_: torch.nn.CrossEntropyLoss
     weight: 
       _target_: torch.tensor
-      _args_:
-        _target_: list
-        _args_: [2,2,2,2,2, 1,1,1,1,1]
+      _args_: [[2,2,2,2,2, 1,1,1,1,1]]
 
 amp: True
