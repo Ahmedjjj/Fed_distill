@@ -1,0 +1,11 @@
+# @package _global_
+default:
+  - half_1_teacher_custom
+  - _self_
+
+student:
+  save_folder: /mlodata1/jellouli/experiments/student/half_1_teacher_custom_weighted/adaptive
+
+  criterion:
+    _target_: torch.nn.CrossEntropyLoss
+    weight: [2,2,2,2,2, 1,1,1,1,1]
