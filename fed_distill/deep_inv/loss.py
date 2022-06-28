@@ -114,6 +114,6 @@ class DILoss(ADILoss):
             var_scale=var_scale,
             bn_scale=bn_scale,
             softmax_temp=softmax_temp,
-            classes=classes
+            classes=classes,
             weights=weights
         )
