@@ -19,6 +19,8 @@ student:
   save_folder: /mlodata1/jellouli/experiments/student/half_1_teacher_custom_weighted/adaptive
   criterion:
     _target_: torch.nn.CrossEntropyLoss
-    weight: [2,2,2,2,2, 1,1,1,1,1]
+    weight: 
+    _target_: torch.Tensor
+    _args_: [2,2,2,2,2, 1,1,1,1,1]
 
 amp: True
