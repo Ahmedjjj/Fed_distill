@@ -49,14 +49,14 @@ class ADILoss(nn.Module):
         comp_scale: float = 0.0,
         softmax_temp: float = 3,
         classes: Optional[Iterable[int]] = None,
-        **kwargs
+        weights: Optional[Iterable[float]]=None
     ) -> None:
         super().__init__()
         self.l2_scale = l2_scale
         self.var_scale = var_scale
         self.bn_scale = bn_scale
         self.comp_scale = comp_scale
-        self.criterion = nn.CrossEntropyLoss(**kwargs)
+        self.criterion = nn.CrossEntropyLoss(weights)
         self.js_div = JensonShannonDiv(softmax_temp)
         self.softmax_temp = softmax_temp
         self.classes = None
@@ -107,7 +107,7 @@ class DILoss(ADILoss):
         bn_scale: float = 10,
         softmax_temp: float = 3,
         classes: Optional[Iterable[int]]=None,
-        **kwargs
+        weights: Optional[Iterable[float]]=None
     ) -> None:
         super().__init__(
             l2_scale=l2_scale,
@@ -115,5 +115,5 @@ class DILoss(ADILoss):
             bn_scale=bn_scale,
             softmax_temp=softmax_temp,
             classes=classes
-            **kwargs
+            weights=weights
         )
