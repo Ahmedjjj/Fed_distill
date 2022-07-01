@@ -1,4 +1,4 @@
-# Fed-distill
+# Fed_distill
 
 
 This repository contains the code for a project done at the MLO Lab, EPFL, Switzerland.
