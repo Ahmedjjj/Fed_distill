@@ -18,11 +18,11 @@ However, this may not be a good idea, since pytorch may need different versions 
 # Repository structure
 The code is under `fed_distill`, and is fairly well documented:
 - `cifar10`: contains helpers for loading/visualizing cifar10 images.
-- `data`: contains abstractions relating to dataset splitting, `torch` Datasets and DataLoader for datasets that evolove during execution.
+- `data`: contains abstractions relating to dataset splitting, a `torch` `Dataset` and `DataLoader` for datasets that evolove during execution.
 - `deep_inv`: contains the code for generating images.
 - `resnet`: contains the `ResNet` implementation.
 - `train`: contains the code used for training.
-- `experimental`: contains the sampling deep inversion implementation (not very robust and tested)
+- `experimental`: contains the sampling deep inversion implementation (not very robust and tested).
 
 
 # Reproducibility of experiments
