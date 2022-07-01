@@ -20,10 +20,17 @@ The code is under `fed_distill`, and is fairly well documented.
 
 # Reproducibility of experiments
 For ease of training and reproducibility, the experiments were run in a pipeline structure, with the following stages:
-1. Data splitting according to a given strategy. This corresponds to the file `data_split.py`
-2. Training of teachers. This coresponds to to the file `train_teachers.py` 
-3. Generating initial batches using deep inversion: This corresponds to the file `generate_initial.py`
-4. Finally, student training in the file `train_student.py`
+1. Data splitting according to a given strategy. This corresponds to the file `data_split.py`. This will output a `json` file containing the train and test split for each student.
+3. Training of teachers. This coresponds to to the file `train_teachers.py`. This will output for each teacher i:
+      - `metrics_teacher{i}.pt`, which contains the training metrics for the corresponding teacher.
+      - `model_teacher{i}.pt`, which will contain the weights of the best performing model (in terms of test accuracy).
+5. Generating initial batches using deep inversion: This corresponds to the file `generate_initial.py`. This will output a file containing a `dict` of two `tensors`, the images and corresponding labels.
+7. Finally, student training in the file `train_student.py`. This will output:
+      - `dataset.pt`, which contains the full synthetic dataset.
+      - `metrics.pt`, which contains the training metrics for the student.
+      - `student.pt`, which contains the final student model weights.
+      - for each teacher i:
+        - `di_metrics_teacher{i}.pt`, which contains the instanteneous accuracy for teacher i and the the student.
 
 The code is run with the amazing [Hydra](https://hydra.cc/) library. Please take a look at the [documentation](https://hydra.cc/docs/intro/) for more info. 
 ## Experiments from Section III (Reproducing Deep Inversion)
@@ -120,5 +127,5 @@ python train_student.py +student=half_1_teacher_custom_weighted \
      
 ```
 If you would like to train with a weight of 2 as well, please change `config/student/half_1_teacher_custom_weighted` at line `24` by modifying the weight vector (10.0 becomes 2.0)
-_
+
 # Acknowledgments
