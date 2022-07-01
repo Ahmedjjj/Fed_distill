@@ -18,13 +18,19 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Trainer:
-    model: nn.Module
-    criterion: nn.Module
-    optimizer: Optimizer
-    scheduler: _LRScheduler
-    loader: DataLoader
-    accuracy_criterion: Optional[Callable[[nn.Module], float]] = None
-    device: Union[str, torch.device] = "cuda"
+    """
+    Class for training a model
+    """
+
+    model: nn.Module  # model to train
+    criterion: nn.Module  # loss function
+    optimizer: Optimizer  # optimizer
+    scheduler: _LRScheduler  # learning rate scheduler
+    loader: DataLoader  # training loader
+    accuracy_criterion: Optional[
+        Callable[[nn.Module], float]
+    ] = None  # accuracy to compute after each iteration and perform model selection, if any
+    device: Union[str, torch.device] = "cuda" # device to run training on
 
     def __post_init__(self):
         self.criterion.to(self.device)

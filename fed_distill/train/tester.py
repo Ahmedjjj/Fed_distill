@@ -6,7 +6,16 @@ from torch.utils.data import DataLoader
 import torch
 
 class AccuracyTester:
+    """
+    Abstraction to wrap accuracy calculation, used during training after each epoch
+    """
     def __init__(self, loader: DataLoader, device: Union[torch.device, str]="cuda") -> None:
+        """
+
+        Args:
+            loader (DataLoader): Loader for the test set
+            device (Union[torch.device, str], optional): Device to run the testing on. Defaults to "cuda".
+        """
         self.loader = loader
         self.device = device
     
@@ -29,6 +38,17 @@ class AccuracyTester:
 
 
 def get_batch_accuracy(model: nn.Module, images: torch.Tensor, labels: torch.Tensor) -> float:
+    """
+    Get accuracy for one batch of images
+
+    Args:
+        model (nn.Module): model
+        images (torch.Tensor): images
+        labels (torch.Tensor): labels
+
+    Returns:
+        float: _description_
+    """
     restore = model.training
     model.eval()
     with torch.no_grad():
@@ -38,6 +58,17 @@ def get_batch_accuracy(model: nn.Module, images: torch.Tensor, labels: torch.Ten
         return acc
 
 def get_class_accuracy(model: nn.Module, test_loader: DataLoader, device: Union[torch.device, str]="cuda") -> Dict[int, float]:
+    """
+    Get class-wise accuracy for a dataset
+
+    Args:
+        model (nn.Module): model
+        test_loader (DataLoader): loader for the test set
+        device (Union[torch.device, str], optional):device to run the testing on. Defaults to "cuda".
+
+    Returns:
+        Dict[int, float]: _description_
+    """
     restore = model.training
     num_correct = defaultdict(lambda : 0)
     num_samples = defaultdict(lambda : 0)
