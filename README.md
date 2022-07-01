@@ -73,12 +73,52 @@ python train_student.py +student=1_teacher_paper  \
 ## 1 teacher with half the data at the student
 ```bash
 # split the data
-python data_split.py +split=full_2_teachers split.save_path=(ADD Here)
+python data_split.py +split=full_2_teachers \
+                      split.save_path=(ADD Here)
 
 # train the teachers
-p
+python train_teachers.py +teacher=full_2_teachers \
+                         +split=full_2_teachers \
+                          teacher.save_folder=(ADD Here) \
+                          split.save_file=(ADD Here (same as before)
+                          
+# Generate initial batches
+python generate_initial.py +student=half_1_teacher_custom \
+                            split=full_2_teachers \
+                            teacher.save_folder=(ADD Here (same as before)) \
+                            split.save_file=(ADD Here (same as before) \
+                            initial.save_path=(ADD Here)
+# train student 
+python train_student.py +student=half_1_teacher_custom \
+                         split=full_2_teachers \
+                         teacher.save_folder=(ADD Here (same as before)) \
+                         split.save_file=(ADD Here (same as before) \
+                         initial.save_path=(ADD Here (same as before))
+                         student.save_folder=(ADD Here)
+# Train with full data
+python generate_initial.py +student=half_1_teacher_custom \
+                            split=full_2_teachers \
+                            teacher.save_folder=(ADD Here (same as before)) \
+                            split.save_file=(ADD Here (same as before) \
+                            initial.save_path=(ADD Here) \
+                            initial.num_batches=50
+python train_student.py +student=half_1_teacher_custom \
+                         split=full_2_teachers \
+                         teacher.save_folder=(ADD Here (same as before)) \
+                         split.save_file=(ADD Here (same as before) \
+                         initial.save_path=(ADD Here (same as before))
+                         student.save_folder=(ADD Here) \
+                         student.new_batches_per_epoch=2
 
+# Weighted training (with a weight of 10)
+python train_student.py +student=half_1_teacher_custom_weighted \
+                         split=full_2_teachers \
+                         teacher.save_folder=(ADD Here (same as before)) \
+                         split.save_file=(ADD Here (same as before) \
+                         initial.save_path=(ADD Here (same as before))
+                         student.save_folder=(ADD Here) \
+     
 ```
-
+If you would like to train with a weight of 2 as well, please change `config/student/half_1_teacher_custom_weighted` at line `24` by modifying the weight vector (10.0 becomes 2.0)
 _
 # Acknowledgments
