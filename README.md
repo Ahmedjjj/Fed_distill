@@ -94,23 +94,23 @@ python train_teachers.py +teacher=full_2_teachers \
                           split.save_file=(ADD Here (same as before)
                           
 # Generate initial batches
-python generate_initial.py +student=half_1_teacher_custom \
+python generate_initial.py +student=half_1_teacher_custom_adap \
                             teacher.save_folder=(ADD Here (same as before)) \
                             split.save_file=(ADD Here (same as before) \
                             initial.save_path=(ADD Here)
 # train student 
-python train_student.py +student=half_1_teacher_custom \
+python train_student.py +student=half_1_teacher_custom_adap \
                          teacher.save_folder=(ADD Here (same as before)) \
                          split.save_file=(ADD Here (same as before) \
                          initial.save_path=(ADD Here (same as before))
                          student.save_folder=(ADD Here)
 # train with full data
-python generate_initial.py +student=half_1_teacher_custom \
+python generate_initial.py +student=half_1_teacher_custom_adap \
                             teacher.save_folder=(ADD Here (same as before)) \
                             split.save_file=(ADD Here (same as before) \
                             initial.save_path=(ADD Here) \
                             initial.num_batches=50
-python train_student.py +student=half_1_teacher_custom \
+python train_student.py +student=half_1_teacher_custom_adap \
                          teacher.save_folder=(ADD Here (same as before)) \
                          split.save_file=(ADD Here (same as before) \
                          initial.save_path=(ADD Here (same as before))
@@ -140,25 +140,25 @@ python train_teachers.py +teacher=iid_10_teachers \
                       teacher.save_folder=(ADD Here)
 
 # generate initial batches
-python generate_initial.py +student=iid_10_teacher \
+python generate_initial.py +student=iid_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here)
 
 # train student 
-python train_student.py +student=iid_10_teacher \
+python train_student.py +student=iid_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here (same as before)) \
                         student.save_folder=(ADD Here)
 
 # train student with less noisy images (3000 updates per batch)
-python generate_initial.py +student=iid_10_teacher \
+python generate_initial.py +student=iid_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here) \
                         deep_inv.di.grad_updates_batch=3000
- python train_student.py +student=iid_10_teacher \
+ python train_student.py +student=iid_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here (same as before)) \
@@ -166,12 +166,12 @@ python generate_initial.py +student=iid_10_teacher \
                         deep_inv.adi.grad_updates_batch=3000
                         
  # train student with sampling (3 teachers) (algorithm 1)
- python experimental_sampling_generate_initial.py +student=iid_10_teacher \
+ python experimental_sampling_generate_initial.py +student=iid_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here) \
                         deep_inv=sampling_experimental
- python experimental_sampling_train_student.py +student=iid_10_teacher \
+ python experimental_sampling_train_student.py +student=iid_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here (same as before)) \
@@ -179,14 +179,14 @@ python generate_initial.py +student=iid_10_teacher \
                         deep_inv=sampling_experimental
    
  # train student with sampling (5 teachers) (algorithm 1)
- python experimental_sampling_generate_initial.py +student=iid_10_teacher \
+ python experimental_sampling_generate_initial.py +student=iid_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here) \
                         deep_inv=sampling_experimental \
                         deep_inv.di.num_teachers=5
                         
- python experimental_sampling_train_student.py +student=iid_10_teacher \
+ python experimental_sampling_train_student.py +student=iid_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_folder=(ADD Here (same as before)) \
@@ -209,14 +209,14 @@ python train_teachers.py +teacher=heter_10_teachers \
                       teacher.save_folder=(ADD Here)
 
 # generate initial batches
-python experimental_sampling_generate_initial.py +student=heter_10_teacher \
+python experimental_sampling_generate_initial.py +student=heter_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here) \
                         deep_inv=sampling_experimental
 
 # train student
- python experimental_sampling_train_student.py +student=heter_10_teacher \
+ python experimental_sampling_train_student.py +student=heter_10_teacher_custom \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here (same as before)) \
@@ -226,6 +226,68 @@ python experimental_sampling_generate_initial.py +student=heter_10_teacher \
 
 ### Fully heterogeneous 2 teachers
 ```bash
+# split the data
+python data_split.py +split=full_2_teachers \
+                      split.save_path=(ADD Here) \
+
+# train teachers
+python train_teachers.py +teacher=full_2_teacher \
+                         +split=full_2_teachers \
+                          split.save_path=(ADD Here (same as before)) \
+                          teacher.save_folder=(ADD Here)
+# generate initial batches
+python generate_initial.py +student=2_teachers_custom_adap \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here)
+
+# train student 
+python train_student.py +student=2_teachers_custom_adap \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
+                        student.save_folder=(ADD Here)
+
+# train student with less noisy images (3000 updates per batch)
+python generate_initial.py +student=2_teachers_custom_adap \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here) \
+                        deep_inv.di.grad_updates_batch=3000
+ python train_student.py +student=2_teacher_custom_adap \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
+                        student.save_folder=(ADD Here) \
+                        deep_inv.adi.grad_updates_batch=3000 
 ```
 
+### Fully heterogeneous 5 teachers
+```bash
+# split the data
+python data_split.py +split=full_5_teachers \
+                      split.save_path=(ADD Here) \
+
+# train teachers
+python train_teachers.py +teacher=full_5_teacher \
+                         +split=full_2_teachers \
+                          split.save_path=(ADD Here (same as before)) \
+                          teacher.save_folder=(ADD Here)
+# generate initial batches
+python generate_initial.py +student=5_teachers_custom_adap \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here)
+
+# train student 
+python train_student.py +student=5_teachers_custom_adap \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
+                        student.save_folder=(ADD Here)
+
+```
 # Acknowledgments
+The code for deep inversion is based on the [original paper implementation](https://github.com/NVlabs/DeepInversion).
+The resnet implementation is taken from [this implementation] (https://github.com/huawei-noah/Efficient-Computing/blob/master/Data-Efficient-Model-Compression/DAFL/resnet.py).
+We use [Hydra](https://hydra.cc/) for configuring the experiments.
