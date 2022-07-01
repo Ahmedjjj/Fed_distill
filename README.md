@@ -1,4 +1,4 @@
-# Fed_distill
+# Dataset Distillation for One-Shot Federated Learning
 
 
 This repository contains the code for a project done at the MLO Lab, EPFL, Switzerland.
