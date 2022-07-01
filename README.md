@@ -174,7 +174,7 @@ python generate_initial.py +student=iid_10_teacher \
  python experimental_sampling_train_student.py +student=iid_10_teacher \
                         split.save_path=(ADD Here (same as before)) \
                         teacher.save_folder=(ADD Here (same as before)) \
-                        initial.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
                         student.save_folder=(ADD Here) \
                         deep_inv=sampling_experimental
    
@@ -193,20 +193,39 @@ python generate_initial.py +student=iid_10_teacher \
                         student.save_folder=(ADD Here) \
                         deep_inv=sampling_experimental \
                         deep_inv.adi.num_teachers=5
-    
-                        
-                        
-                       
-                       
-                    
-
-                        
-                        
-                        
-
 ```
 
 ### Heterogeneous 10 teachers
 
-### Fully heterogeneous 2 
+```bash
+# split the data
+python split_data.py +split=heter_10_teachers \
+                     split.save_path=(ADD Here)
+
+# train teachers
+python train_teachers.py +teacher=heter_10_teachers \
+                      +split=heter_10_teachers \ 
+                      split.save_path=(ADD Here (same as before)) \
+                      teacher.save_folder=(ADD Here)
+
+# generate initial batches
+python experimental_sampling_generate_initial.py +student=heter_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here) \
+                        deep_inv=sampling_experimental
+
+# train student
+ python experimental_sampling_train_student.py +student=heter_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
+                        student.save_folder=(ADD Here) \
+                        deep_inv=sampling_experimental
+```
+
+### Fully heterogeneous 2 teachers
+```bash
+```
+
 # Acknowledgments
