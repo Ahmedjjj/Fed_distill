@@ -35,6 +35,8 @@ For ease of training and reproducibility, the experiments were run in a pipeline
 The files `experimental_sampling_generate_initial.py` and `experimental_sampling_train_student.py` contain the main scripts for training using Sampling Deep Inversion` (Algorithm 1 in the report).
 
 The code is run with the amazing [Hydra](https://hydra.cc/) library. Please take a look at the [documentation](https://hydra.cc/docs/intro/) for more info. 
+In the following are the commands to reproduce the experiments from the report. Note that parts with the form (ADD Here) can be modified directly in the config files for ease of use.
+
 ## Experiments from Section III (Reproducing Deep Inversion)
 
 ```bash
@@ -78,8 +80,8 @@ python train_student.py +student=1_teacher_paper  \
                         student.save_folder=(ADD HERE)
 ```
 
-### Experiments from Section IV (Federated Learning with dataset distillation)
-## 1 teacher with half the data at the student
+## Experiments from Section IV (Federated Learning with dataset distillation)
+### 1 teacher with half the data at the student
 ```bash
 # split the data
 python data_split.py +split=full_2_teachers \
@@ -130,4 +132,12 @@ python train_student.py +student=half_1_teacher_custom_weighted \
 ```
 If you would like to train with a weight of 2 as well, please change `config/student/half_1_teacher_custom_weighted` at line `24` by modifying the weight vector (10.0 becomes 2.0)
 
+### IID 10 teachers
+```bash
+
+```
+
+### Heterogeneous 10 teachers
+
+### Fully heterogeneous 2 
 # Acknowledgments
