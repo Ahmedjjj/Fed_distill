@@ -32,23 +32,52 @@ The code is run with the amazing [Hydra](https://hydra.cc/) library. Please take
 # No splitting is needed (1 teacher)
 
 # Train teacher
-python train_teachers.py +teacher=full_1_teacher teacher.save_folder=(ADD HERE)
+python train_teachers.py +teacher=full_1_teacher \
+                          teacher.save_folder=(ADD HERE)
 
 # Generate initial batches
-python generate_initial.py +student=1_teacher_custom teacher.save_folder=(ADD Here (same as before)) initial.save_path=(ADD HERE)
+python generate_initial.py +student=1_teacher_custom \
+                            teacher.save_folder=(ADD Here (same as before)) \
+                            initial.save_path=(ADD HERE)
 
 # Train without adaptiveness
-python train_student.py +student=1_teacher_custom teacher.save_folder=(ADD Here (same as before)) initial.save_path=(ADD Here (same as before)) student.save_folder=(ADD HERE)
+python train_student.py +student=1_teacher_custom \
+                         teacher.save_folder=(ADD Here (same as before)) \
+                         initial.save_path=(ADD Here (same as before)) \
+                         student.save_folder=(ADD HERE)
 
 # Train with adaptiveness
-python train_student.py +student=1_teacher_custom_adap teacher.save_folder=(ADD Here (same as before)) initial.save_path=(ADD Here (same as before)) student.save_folder=(ADD HERE)
+python train_student.py +student=1_teacher_custom_adap \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
+                        student.save_folder=(ADD HERE)
 
 # Train non adaptive with the same code as adaptive while setting the competition scale to 0
-python train_student.py +student=1_teacher_custom_adap teacher.save_folder=(ADD Here (same as before)) initial.save_path=(ADD Here (same as before)) student.save_folder=(ADD HERE) deep_inv.adi.loss.comp_scale=0
+python train_student.py +student=1_teacher_custom_adap \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
+                        student.save_folder=(ADD HERE) \
+                        deep_inv.adi.loss.comp_scale=0
 
 # Train with parameters from the paper
-python generate_initial.py +student=1_teacher_paper teacher.save_folder=(ADD Here (same as before)) initial.save_path=(ADD HERE)
-python train_student.py +student=1_teacher_paper teacher.save_folder=(ADD Here (same as before)) initial.save_path=(ADD Here (same as before)) student.save_folder=(ADD HERE)
+python generate_initial.py +student=1_teacher_paper \
+                            teacher.save_folder=(ADD Here (same as before)) \
+                            initial.save_path=(ADD HERE)
+python train_student.py +student=1_teacher_paper  \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
+                        student.save_folder=(ADD HERE)
+```
+
+### Experiments from Section IV (Federated Learning with dataset distillation)
+## 1 teacher with half the data at the student
+```bash
+# split the data
+python data_split.py +split=full_2_teachers split.save_path=(ADD Here)
+
+# train the teachers
+p
+
 ```
 
 _
