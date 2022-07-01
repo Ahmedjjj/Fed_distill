@@ -16,7 +16,13 @@ pip install -e requirements.txt
 However, this may not be a good idea, since pytorch may need different versions depending on your cuda version. A good way to simplify this process is to use [light-the-torch](https://github.com/pmeier/light-the-torch).
 
 # Repository structure
-The code is under `fed_distill`, and is fairly well documented.
+The code is under `fed_distill`, and is fairly well documented:
+- `cifar10`: contains helpers for loading/visualizing cifar10 images.
+- `data`: contains abstractions relating to dataset splitting, `torch` Datasets and DataLoader for datasets that evolove during execution.
+- `deep_inv`: contains the code for generating images.
+- `resnet`: contains the `ResNet` implementation.
+- `train`: contains the code used for training
+
 
 # Reproducibility of experiments
 For ease of training and reproducibility, the experiments were run in a pipeline structure, with the following stages:
