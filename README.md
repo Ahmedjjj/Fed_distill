@@ -31,6 +31,8 @@ For ease of training and reproducibility, the experiments were run in a pipeline
       - `student.pt`, which contains the final student model weights.
       - for each teacher i:
         - `di_metrics_teacher{i}.pt`, which contains the instanteneous accuracy for teacher i and the the student.
+ 
+The files `experimental_sampling_generate_initial.py` and `experimental_sampling_train_student.py` contain the main scripts for training using Sampling Deep Inversion` (Algorithm 1 in the report).
 
 The code is run with the amazing [Hydra](https://hydra.cc/) library. Please take a look at the [documentation](https://hydra.cc/docs/intro/) for more info. 
 ## Experiments from Section III (Reproducing Deep Inversion)
