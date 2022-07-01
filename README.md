@@ -42,35 +42,35 @@ In the following are the commands to reproduce the experiments from the report. 
 ```bash
 # No splitting is needed (1 teacher)
 
-# Train teacher
+# train teacher
 python train_teachers.py +teacher=full_1_teacher \
                           teacher.save_folder=(ADD HERE)
 
-# Generate initial batches
+# generate initial batches
 python generate_initial.py +student=1_teacher_custom \
                             teacher.save_folder=(ADD Here (same as before)) \
                             initial.save_path=(ADD HERE)
 
-# Train without adaptiveness
+# train without adaptiveness
 python train_student.py +student=1_teacher_custom \
                          teacher.save_folder=(ADD Here (same as before)) \
                          initial.save_path=(ADD Here (same as before)) \
                          student.save_folder=(ADD HERE)
 
-# Train with adaptiveness
+# train with adaptiveness
 python train_student.py +student=1_teacher_custom_adap \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here (same as before)) \
                         student.save_folder=(ADD HERE)
 
-# Train non adaptive with the same code as adaptive while setting the competition scale to 0
+# train non adaptive with the same code as adaptive while setting the competition scale to 0
 python train_student.py +student=1_teacher_custom_adap \
                         teacher.save_folder=(ADD Here (same as before)) \
                         initial.save_path=(ADD Here (same as before)) \
                         student.save_folder=(ADD HERE) \
                         deep_inv.adi.loss.comp_scale=0
 
-# Train with parameters from the paper
+# train with parameters from the paper
 python generate_initial.py +student=1_teacher_paper \
                             teacher.save_folder=(ADD Here (same as before)) \
                             initial.save_path=(ADD HERE)
@@ -95,35 +95,30 @@ python train_teachers.py +teacher=full_2_teachers \
                           
 # Generate initial batches
 python generate_initial.py +student=half_1_teacher_custom \
-                            split=full_2_teachers \
                             teacher.save_folder=(ADD Here (same as before)) \
                             split.save_file=(ADD Here (same as before) \
                             initial.save_path=(ADD Here)
 # train student 
 python train_student.py +student=half_1_teacher_custom \
-                         split=full_2_teachers \
                          teacher.save_folder=(ADD Here (same as before)) \
                          split.save_file=(ADD Here (same as before) \
                          initial.save_path=(ADD Here (same as before))
                          student.save_folder=(ADD Here)
-# Train with full data
+# train with full data
 python generate_initial.py +student=half_1_teacher_custom \
-                            split=full_2_teachers \
                             teacher.save_folder=(ADD Here (same as before)) \
                             split.save_file=(ADD Here (same as before) \
                             initial.save_path=(ADD Here) \
                             initial.num_batches=50
 python train_student.py +student=half_1_teacher_custom \
-                         split=full_2_teachers \
                          teacher.save_folder=(ADD Here (same as before)) \
                          split.save_file=(ADD Here (same as before) \
                          initial.save_path=(ADD Here (same as before))
                          student.save_folder=(ADD Here) \
                          student.new_batches_per_epoch=2
 
-# Weighted training (with a weight of 10)
+# weighted training (with a weight of 10)
 python train_student.py +student=half_1_teacher_custom_weighted \
-                         split=full_2_teachers \
                          teacher.save_folder=(ADD Here (same as before)) \
                          split.save_file=(ADD Here (same as before) \
                          initial.save_path=(ADD Here (same as before))
@@ -134,6 +129,80 @@ If you would like to train with a weight of 2 as well, please change `config/stu
 
 ### IID 10 teachers
 ```bash
+# split the data
+python split_data.py +split=iid_10_teachers \
+                     split.save_path=(ADD Here)
+
+# train teachers
+python train_teachers.py +teacher=iid_10_teachers \
+                      +split=iid_10_teachers \ 
+                      split.save_path=(ADD Here (same as before)) \
+                      teacher.save_folder=(ADD Here)
+
+# generate initial batches
+python generate_initial.py +student=iid_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here)
+
+# train student 
+python train_student.py +student=iid_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
+                        student.save_folder=(ADD Here)
+
+# train student with less noisy images (3000 updates per batch)
+python generate_initial.py +student=iid_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here) \
+                        deep_inv.di.grad_updates_batch=3000
+ python train_student.py +student=iid_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here (same as before)) \
+                        student.save_folder=(ADD Here) \
+                        deep_inv.adi.grad_updates_batch=3000
+                        
+ # train student with sampling (3 teachers) (algorithm 1)
+ python experimental_sampling_generate_initial.py +student=iid_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here) \
+                        deep_inv=sampling_experimental
+ python experimental_sampling_train_student.py +student=iid_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_folder=(ADD Here (same as before)) \
+                        student.save_folder=(ADD Here) \
+                        deep_inv=sampling_experimental
+   
+ # train student with sampling (5 teachers) (algorithm 1)
+ python experimental_sampling_generate_initial.py +student=iid_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_path=(ADD Here) \
+                        deep_inv=sampling_experimental \
+                        deep_inv.di.num_teachers=5
+                        
+ python experimental_sampling_train_student.py +student=iid_10_teacher \
+                        split.save_path=(ADD Here (same as before)) \
+                        teacher.save_folder=(ADD Here (same as before)) \
+                        initial.save_folder=(ADD Here (same as before)) \
+                        student.save_folder=(ADD Here) \
+                        deep_inv=sampling_experimental \
+                        deep_inv.adi.num_teachers=5
+    
+                        
+                        
+                       
+                       
+                    
+
+                        
+                        
+                        
 
 ```
 
