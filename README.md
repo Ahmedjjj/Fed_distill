@@ -288,6 +288,6 @@ python train_student.py +student=5_teachers_custom_adap \
 
 ```
 # Acknowledgments
-The code for deep inversion is based on the [original paper implementation](https://github.com/NVlabs/DeepInversion).
-The resnet implementation is taken from [this implementation] (https://github.com/huawei-noah/Efficient-Computing/blob/master/Data-Efficient-Model-Compression/DAFL/resnet.py).
+The code for deep inversion is based on the [original paper implementation](https://github.com/NVlabs/DeepInversion).  
+The resnet implementation is taken from [this implementation](https://github.com/huawei-noah/Efficient-Computing/blob/master/Data-Efficient-Model-Compression/DAFL/resnet.py).  
 We use [Hydra](https://hydra.cc/) for configuring the experiments.
