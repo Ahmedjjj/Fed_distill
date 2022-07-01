@@ -53,13 +53,13 @@ class DeepInversionFeatureHook:
 
 @dataclass
 class AdaptiveDeepInversion:
-    loss: ADILoss
-    optimizer: torch.optim.Optimizer
-    teacher: nn.Module
-    student: Optional[nn.Module] = None
-    grad_updates_batch: int = 1000
-    input_jitter: bool = True
-    use_amp: bool = True
+    loss: ADILoss # loss to use for batch generation
+    optimizer: torch.optim.Optimizer # optimizer to user
+    teacher: nn.Module # teacher module
+    student: Optional[nn.Module] = None # student module
+    grad_updates_batch: int = 1000 # number of gradient updates
+    input_jitter: bool = True # if True, each iteration will apply input jittering
+    use_amp: bool = True # if True, use Automatic Mixed Precision (very good speedup)
 
     def __post_init__(self) -> None:
         self.inputs = self.optimizer.param_groups[0]["params"][

@@ -8,6 +8,15 @@ import torch.nn.functional as F
 
 
 def compute_var(inputs: torch.Tensor) -> torch.Tensor:
+    """
+    Compute the total variance loss of a batch of images
+
+    Args:
+        inputs (torch.Tensor): input batch, of shape (number of batches, number of channels, height, width)
+
+    Returns:
+        torch.Tensor: _description_
+    """
     diff1 = inputs[:, :, :, :-1] - inputs[:, :, :, 1:]
     diff2 = inputs[:, :, :-1, :] - inputs[:, :, 1:, :]
     diff3 = inputs[:, :, 1:, :-1] - inputs[:, :, :-1, 1:]
@@ -17,6 +26,13 @@ def compute_var(inputs: torch.Tensor) -> torch.Tensor:
 
 class JensonShannonDiv(nn.Module):
     def __init__(self, softmax_temp: float = 3) -> None:
+        """
+        Compute the JS divergence of two batches of vectors corresponding
+        to outputs of different networks
+
+        Args:
+            softmax_temp (float, optional): temperature used for the softmax operation. Defaults to 3.
+        """
         super().__init__()
         self.kl_div = nn.KLDivLoss(reduction="batchmean")
         self.softmax_temp = softmax_temp
@@ -51,6 +67,18 @@ class ADILoss(nn.Module):
         classes: Optional[Iterable[int]] = None,
         weights: Optional[Iterable[float]]=None
     ) -> None:
+        """
+        Adaptive deep inversion loss module
+
+        Args:
+            l2_scale (float, optional): L2 scale. Defaults to 0.0.
+            var_scale (float, optional): total variance scale. Defaults to 5e-5.
+            bn_scale (float, optional): Batch norm scale. Defaults to 10.
+            comp_scale (float, optional): Competition scale. Defaults to 0.0.
+            softmax_temp (float, optional): Temperature for the softmax before JS divergence. Defaults to 3.
+            classes (Optional[Iterable[int]], optional): classes to mask on. Defaults to None.
+            weights (Optional[Iterable[float]], optional): weights for each class. Defaults to None.
+        """
         super().__init__()
         self.l2_scale = l2_scale
         self.var_scale = var_scale
