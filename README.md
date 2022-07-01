@@ -21,7 +21,7 @@ The code is under `fed_distill`, and is fairly well documented:
 - `data`: contains abstractions relating to dataset splitting, `torch` Datasets and DataLoader for datasets that evolove during execution.
 - `deep_inv`: contains the code for generating images.
 - `resnet`: contains the `ResNet` implementation.
-- `train`: contains the code used for training
+- `train`: contains the code used for training.
 
 
 # Reproducibility of experiments
