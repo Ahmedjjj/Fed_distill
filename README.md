@@ -22,6 +22,7 @@ The code is under `fed_distill`, and is fairly well documented:
 - `deep_inv`: contains the code for generating images.
 - `resnet`: contains the `ResNet` implementation.
 - `train`: contains the code used for training.
+- `experimental`: contains the sampling deep inversion implementation (not very robust and tested)
 
 
 # Reproducibility of experiments
